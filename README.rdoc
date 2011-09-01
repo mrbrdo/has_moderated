@@ -56,6 +56,18 @@ to discard (destroy) it, call
 
   moderation.discard
 
+== Tests
+
+I've tested this project using RSpec. You can find the tests in
+
+  test/dummy/spec/models/task_spec.rb
+
+You can run the tests by running
+
+  rake spec
+
+in the root directory.
+
 == License
 
 This project rocks and uses MIT-LICENSE.
