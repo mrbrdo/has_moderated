@@ -34,6 +34,8 @@ You can also specify associations that need to be saved for moderation as well (
 
 in your Post model (post.rb). This only matters when you use has_moderated_existance.
 
+Right now it's not possible to moderate deletion (destruction) of records.
+
 == Manage moderations
 To see pending moderations, simply call
 
