@@ -1,15 +1,46 @@
 = HasModerated
 
 == Installing
-rails generate has_moderated:install
-rake db:migrate
+
+  rails generate has_moderated:install
+
+
+  rake db:migrate
+
 
 == Usage
-To moderated a field or more fields, add *has_moderated :attr1, :attr2* to your model.
+To moderated a field or more fields, add
 
-If you want to moderate the creation of a record (for example, you don't want new blog posts to show up until they are accepted by a moderator), use *has_moderated_existance*. You can also specify associations that need to be saved for moderation as well (if moderating the creation of new records) - for example, if a Post has_many :links, and you want to submit these links to moderation as well (note, if you don't, they will be discarded), use *has_moderated_existance :with_associations => [:links]* in your Post model (post.rb).
+  has_moderated :attr1, :attr2
 
-To see pending moderations, simply call *Moderation.all*. Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data (attr_value) is serialized in YAML format and can be deserialized by calling *YAML::load(moderation.attr_value)*. To accept a moderation, call *moderation.accept*, to discard (destroy) it, call *moderation.discard*.
+to your model.
+
+If you want to moderate the creation of a record (for example, you don't want new blog posts to show up until they are accepted by a moderator), use
+
+  has_moderated_existance
+
+You can also specify associations that need to be saved for moderation as well (if moderating the creation of new records) - for example, if a Post has_many :links, and you want to submit these links to moderation as well (note, if you don't, they will be discarded), use
+
+  has_moderated_existance :with_associations => [:links]
+
+in your Post model (post.rb).
+
+== Manage moderations
+To see pending moderations, simply call
+
+  Moderation.all
+
+Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data (attr_value) is serialized in YAML format and can be deserialized by calling
+
+  YAML::load(moderation.attr_value)
+
+To accept a moderation, call
+
+  moderation.accept
+
+to discard (destroy) it, call
+
+  moderation.discard
 
 == License
 
