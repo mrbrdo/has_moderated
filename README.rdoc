@@ -18,7 +18,7 @@ To set up has_moderated in your project, use
 This will generate a Moderation model and a migration for it.
 
 == Usage
-To moderated a field or more fields, add
+To moderate one or more attributes, add
 
   has_moderated :attr1, :attr2
 
@@ -32,13 +32,18 @@ You can also specify associations that need to be saved for moderation as well (
 
   has_moderated_existance :with_associations => [:links]
 
-in your Post model (post.rb).
+in your Post model (post.rb). This only matters when you use has_moderated_existance.
 
 == Manage moderations
 To see pending moderations, simply call
 
   Moderation.all
 
+You can also see moderations for a specific record. For example, if you have Post model, you can call moderations on it.
+
+  post = Post.first
+  post.moderations
+  
 Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data (attr_value) is serialized in YAML format and can be deserialized by calling
 
   YAML::load(moderation.attr_value)
