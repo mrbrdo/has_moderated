@@ -15,6 +15,7 @@ To set up has_moderated in your project, use
 
   rake db:migrate
 
+This will generate a Moderation model and a migration for it.
 
 == Usage
 To moderated a field or more fields, add
