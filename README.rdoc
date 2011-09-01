@@ -2,6 +2,14 @@
 
 == Installing
 
+  gem install has_moderated
+
+Right now, rubygems.org is having some problems so I can't push the gem, but you can install from this repo by calling
+
+  rake install
+
+To set up has_moderated in your project, use
+
   rails generate has_moderated:install
 
 
