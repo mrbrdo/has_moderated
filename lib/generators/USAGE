@@ -1,0 +1,9 @@
+Description:
+    Generates migrations and model for has_moderated.
+
+Example:
+    rails generate has_moderated:install
+
+    This will create:
+        app/models/moderation.rb
+        db/migrate/*_create_moderations.rb
