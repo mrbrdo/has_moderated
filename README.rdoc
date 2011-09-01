@@ -4,6 +4,10 @@
 
   gem install has_moderated
 
+And add it to your project's Gemfile
+
+  gem "has_moderated"
+
 To set up has_moderated in your project, use
 
   rails generate has_moderated:install
