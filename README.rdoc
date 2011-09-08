@@ -26,15 +26,22 @@ to your model.
 
 If you want to moderate the creation of a record (for example, you don't want new blog posts to show up until they are accepted by a moderator), use
 
-  has_moderated_existance
+  has_moderated_create
 
 You can also specify associations that need to be saved for moderation as well (if moderating the creation of new records) - for example, if a Post has_many :links, and you want to submit these links to moderation as well (note, if you don't, they will be discarded), use
 
-  has_moderated_existance :with_associations => [:links]
+  has_moderated_create :with_associations => [:links]
 
-in your Post model (post.rb). This only matters when you use has_moderated_existance.
+in your Post model (post.rb). This only matters when you use has_moderated_create.
+You can also use
 
-Right now it's not possible to moderate deletion (destruction) of records.
+  has_moderated_create :with_associations => :all
+
+to include all associations, but I recommend you explicitly specify them if possible. By default, no associations are included.
+
+To moderate destruction of records, use
+
+  has_moderated_destroy
 
 == Manage moderations
 To see pending moderations, simply call
@@ -69,6 +76,11 @@ You can run the tests by running
   rake spec
 
 in the root directory.
+
+== Problems
+
+You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
+If you have a problem like that you can extract the problematic attributes into a seperate has_one association. If you moderate create, save that model without the foreign key first, and then use has_moderated_create :with_associations => [:association_name] and add the association (to the existing associated model) before saving the moderated model. If you have questions about this or don't understand what I mean, open an issue here at GitHub and I will explain it further.
 
 == License
 

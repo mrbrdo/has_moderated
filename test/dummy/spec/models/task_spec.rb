@@ -112,4 +112,68 @@ describe Task do
     Moderation.last.accept
     Task.last.desc.should eq("Hollywood Hills")
   end
+
+  it "remembers associations to existing records" do
+    subtask = Subtask.create! :title => "Bye Bye"
+    Subtask.count.should eq(1)
+
+    t = Task.new :title => "Hollywood Hills"
+    t.subtasks << subtask
+    t.save
+
+    Task.count.should eq(0)
+    Subtask.first.task.should be_nil
+
+    Moderation.last.accept
+    Subtask.first.task.should_not be_nil
+    t = Task.first
+    t.subtasks.count.should eq(1)
+    t.subtasks.first.title.should eq("Bye Bye")
+  end
+
+  it "accepts :all for has_moderated_create's :with_associations option" do
+    t = TaskAll.new :title => "Bye Bye"
+    t.subtasks.build :title => "Hollywood Hills"
+    t.save
+
+    TaskAll.count.should eq(0)
+    Subtask.count.should eq(0)
+
+    Moderation.last.accept
+    
+    TaskAll.count.should eq(1)
+    Subtask.count.should eq(1)
+    TaskAll.first.title.should eq("Bye Bye")
+    TaskAll.first.subtasks.first.title.should eq("Hollywood Hills")
+  end
+
+  it "ignores associations to existing records that were deleted" do
+    subtask = Subtask.create! :title => "Bye Bye"
+    Subtask.count.should eq(1)
+
+    t = Task.new :title => "Hollywood Hills"
+    t.subtasks << subtask
+    t.save
+
+    Task.count.should eq(0)
+    Subtask.delete_all
+    Subtask.count.should eq(0)
+    
+    Moderation.last.accept
+    Task.first.subtasks.count.should eq(0)
+    Subtask.count.should eq(0)
+  end
+
+  it "moderates destroy" do
+    Task.create! :title => "Bye Bye"
+    Moderation.last.accept
+    
+    Task.count.should eq(1)
+
+    Task.first.destroy
+    Task.count.should eq(1)
+
+    Moderation.last.accept
+    Task.count.should eq(0)
+  end
 end
