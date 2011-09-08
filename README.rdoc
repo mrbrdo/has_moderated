@@ -17,6 +17,14 @@ To set up has_moderated in your project, use
 
 This will generate a Moderation model and a migration for it.
 
+== Upgrading
+
+When upgrading, rerun the generator
+
+  rails generate has_moderated:install
+
+If a migration file is created, look if it matches your current schema. If it doesn't update the schema manually so it will match the one in the migration.
+
 == Usage
 To moderate one or more attributes, add
 
