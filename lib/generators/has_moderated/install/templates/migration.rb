@@ -1,5 +1,9 @@
 class CreateModerations < ActiveRecord::Migration
   def self.up
+    if table_exists? :moderations # for upgrading
+      Moderation.all.each { |m| m.accept }
+      drop_table :moderations
+    end
     create_table "moderations" do |t|
       t.integer "moderatable_id",  :null => true
       t.string  "moderatable_type",  :null => false
