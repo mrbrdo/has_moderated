@@ -179,7 +179,9 @@ module HasModerated
       assocs.each_pair do |assoc_name, assoc|
         one_assoc = []
         assoc.each do |m|
-          if m.new_record?
+          if m.class == Fixnum
+            one_assoc.push(m)
+          elsif m.new_record?
             one_assoc.push(m.attributes)
           else
             one_assoc.push(m.id)
