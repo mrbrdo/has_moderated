@@ -176,4 +176,39 @@ describe Task do
     Moderation.last.accept
     Task.count.should eq(0)
   end
+
+  it "moderates new associations on existing records" do
+    t = Task.create! :title => "Bye Bye"
+    Moderation.last.accept
+
+    t = Task.first
+    t.add_associations_moderated(:subtasks => [Subtask.new(:task_id => t.id, :title => "Hollywood Hills")])
+    t.subtasks.count.should eq(0)
+    t.save
+    t.subtasks.count.should eq(0)
+    Subtask.count.should eq(0)
+
+    Moderation.last.accept
+    t.subtasks.count.should eq(1)
+    Subtask.count.should eq(1)
+    Task.first.subtasks.first.title.should eq("Hollywood Hills")
+  end
+
+  it "moderates new associations to existing records on existing records" do
+    sub = Subtask.create! :title => "Hollywood Hills"
+    t = Task.create! :title => "Bye Bye"
+    Moderation.last.accept
+
+    t = Task.first
+    t.add_associations_moderated(:subtasks => [sub])
+    t.subtasks.count.should eq(0)
+    Subtask.count.should eq(1)
+    t.save
+    t.subtasks.count.should eq(0)
+
+    Moderation.last.accept
+    t.subtasks.count.should eq(1)
+    Subtask.count.should eq(1)
+    Task.first.subtasks.first.title.should eq("Hollywood Hills")
+  end
 end

@@ -8,20 +8,25 @@ class Moderation < ActiveRecord::Base
       moderatable.destroy
       moderatable.has_moderated_updating = false
       self.destroy
-    # case: moderated existance (new record)
     elsif attr_name == '-'
-      # create the main record
-      rec = moderatable_type.constantize.new
       loaded_val = YAML::load(attr_value)
-      attrs = loaded_val[:main_model]
-      # bypass attr_accessible protection
-      attrs.each_pair do |key, val|
-        rec.send(key.to_s+"=", val) unless key.to_s == 'id'
+      # case: moderated existance (new record)
+      if moderatable_id.blank?
+        # create the main record
+        rec = moderatable_type.constantize.new
+        attrs = loaded_val[:main_model]
+        # bypass attr_accessible protection
+        attrs.each_pair do |key, val|
+          rec.send(key.to_s+"=", val) unless key.to_s == 'id'
+        end
+        # temporarily disable moderation check on save, and save updated record
+        rec.has_moderated_updating = true
+        rec.save
+        rec.has_moderated_updating = false
+      # case: moderated associations (existing record)
+      else
+        rec = moderatable
       end
-      # temporarily disable moderation check on save, and save updated record
-      rec.has_moderated_updating = true
-      rec.save
-      rec.has_moderated_updating = false
 
       # check for saved associated records
       loaded_val[:associations].each_pair do |assoc_name, assoc_records|

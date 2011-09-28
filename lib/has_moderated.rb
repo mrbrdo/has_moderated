@@ -13,11 +13,17 @@ module HasModerated
       has_many :moderations, :as => :moderatable, :dependent => :destroy
       
       cattr_accessor :moderated_attributes
+      cattr_accessor :moderated_options
 
       self.moderated_attributes ||= []
+      self.moderated_options ||= {}
 
       args.each do |arg|
-        self.moderated_attributes.push(arg.to_s)
+        if arg.respond_to?("[]")
+          self.moderated_options = self.moderated_options.merge(arg)
+        else
+          self.moderated_attributes.push(arg.to_s)
+        end
       end
 
       # use an attribute to temporarily disable moderation before_save filter
@@ -101,10 +107,10 @@ module HasModerated
         :attr_value => "destroy"
       })
     end
-    
-    def to_moderation_created options
+
+    def get_assocs_for_moderation options
       assocs = []
-      
+              
       unless options.blank?
         unless options[:with_associations].blank?
           if options[:with_associations] == :all
@@ -130,6 +136,12 @@ module HasModerated
         end
         assoc_attrs[assoc] = one_assoc unless one_assoc.empty?
       end
+
+      assoc_attrs
+    end
+    
+    def to_moderation_created options
+      assoc_attrs = get_assocs_for_moderation(options)
 
       attr_value = {
         :main_model => self.attributes,
@@ -159,6 +171,34 @@ module HasModerated
           self.send(att_name+"=", values[0])
         end
       end
+      
+      moderations
+    end
+
+    def add_associations_moderated assocs
+      assoc_attrs = {}
+      assocs.each_pair do |assoc_name, assoc|
+        one_assoc = []
+        assoc.each do |m|
+          if m.new_record?
+            one_assoc.push(m.attributes)
+          else
+            one_assoc.push(m.id)
+          end
+        end
+        assoc_attrs[assoc_name] = one_assoc unless one_assoc.empty?
+      end
+
+      moderations = []
+      if !assoc_attrs.empty?
+        moderations.push(Moderation.create!({
+            :moderatable_type => self.class.to_s,
+            :moderatable_id => self.id,
+            :attr_name => "-",
+            :attr_value => { :associations => assoc_attrs }
+          }))
+      end
+      
       moderations
     end
   end
