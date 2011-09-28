@@ -21,7 +21,7 @@ class Moderation < ActiveRecord::Base
         end
         # temporarily disable moderation check on save, and save updated record
         rec.has_moderated_updating = true
-        rec.save
+        rec.save(:validate => false) # don't run validations
         rec.has_moderated_updating = false
       # case: moderated associations (existing record)
       else
@@ -52,7 +52,7 @@ class Moderation < ActiveRecord::Base
             arec.send(fk.to_s+"=", rec.id) # set association to the newly created record
             # disable moderation for associated model (if enabled)
             arec.has_moderated_updating = true if arec.respond_to?("has_moderated_updating=")
-            arec.save
+            arec.save(:validate => false) # don't run validations
             arec.has_moderated_updating = false if arec.respond_to?("has_moderated_updating=")
           end
         end
@@ -64,7 +64,7 @@ class Moderation < ActiveRecord::Base
       moderatable.has_moderated_updating = true
       # bypass attr_accessible protection
       moderatable.send(attr_name.to_s+"=", YAML::load(attr_value))
-      moderatable.save
+      moderatable.save(:validate => false) # don't run validations
       moderatable.has_moderated_updating = false
       self.destroy # destroy this moderation since it has been applied
     end
