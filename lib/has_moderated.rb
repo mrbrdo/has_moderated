@@ -160,7 +160,7 @@ module HasModerated
       moderations = []
       self.changes.each_pair do |att_name, values|
         att_name = att_name.to_s
-        if self.class.moderated_attributes.include?(att_name)
+        if self.class.moderated_attributes.include?(att_name) && !(values[0].blank? && values[1].blank?)
           moderations.push(Moderation.create!({
             :moderatable_type => self.class.to_s,
             :moderatable_id => self.id,
