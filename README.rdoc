@@ -50,6 +50,18 @@ To moderate destruction of records, use
 
   has_moderated_destroy
 
+== Moderating associations on existing records
+Sometimes you will want to moderate association changes for existing records, not only on create. Right now, there is only one way to do this and it's not as automagic as most of the other things. Instead of doing something like
+
+  post.comments << new_comment
+  post.scores << new_score
+
+You will *instead* have to call add_associations_moderated like so
+
+  post.add_associations_moderated(:comments => [new_comment], :scores => [new_score])
+
+The values can be either new records (not in the database), existing records, or Fixnum (numerical) IDs. Please note you should not use .build to create new records, because if you call save on the parent model it will automatically create the record, bypassing moderation.
+
 == Manage moderations
 To see pending moderations, simply call
 
