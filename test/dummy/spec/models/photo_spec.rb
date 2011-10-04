@@ -62,6 +62,7 @@ describe Photo do
     dirEmpty?(tempdir).should be_true
     dirEmpty?(uploaddir).should be_false
     Photo.first.photo.file.should_not be_nil
-    assert(Photo.first.photo.file.file =~ /logo_arnes\.gif/)
+    File.exist?(Photo.first.photo.file.file).should be_true
+    assert(Photo.first.photo.file.file =~ /photo\/1\/logo_arnes.gif\Z/)
   end
 end

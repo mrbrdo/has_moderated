@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111004153147) do
+ActiveRecord::Schema.define(:version => 20111004164509) do
 
   create_table "hook_tests", :force => true do |t|
     t.string   "title"
@@ -28,10 +28,17 @@ ActiveRecord::Schema.define(:version => 20111004153147) do
     t.datetime "updated_at"
   end
 
+  create_table "photo_holders", :force => true do |t|
+    t.string   "title"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "photos", :force => true do |t|
     t.string   "photo"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "photo_holder_id"
   end
 
   create_table "subtasks", :force => true do |t|
