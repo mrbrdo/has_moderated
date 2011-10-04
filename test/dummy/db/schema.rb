@@ -10,13 +10,19 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110908025606) do
+ActiveRecord::Schema.define(:version => 20111003234101) do
 
   create_table "moderations", :force => true do |t|
     t.integer  "moderatable_id"
     t.string   "moderatable_type",               :null => false
     t.string   "attr_name",        :limit => 60, :null => false
     t.text     "attr_value",                     :null => false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "photos", :force => true do |t|
+    t.string   "photo"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -33,6 +39,13 @@ ActiveRecord::Schema.define(:version => 20110908025606) do
   create_table "task_alls", :force => true do |t|
     t.string   "title"
     t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "task_photos", :force => true do |t|
+    t.string   "photo"
+    t.integer  "task_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

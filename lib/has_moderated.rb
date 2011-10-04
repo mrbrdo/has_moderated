@@ -1,3 +1,6 @@
+require 'has_moderated/moderation_model'
+require 'has_moderated/carrier_wave'
+
 module HasModerated
 
   def self.included(base)
@@ -110,7 +113,7 @@ module HasModerated
 
     def get_assocs_for_moderation options
       assocs = []
-              
+      
       unless options.blank?
         unless options[:with_associations].blank?
           if options[:with_associations] == :all
@@ -129,7 +132,7 @@ module HasModerated
         one_assoc = []
         self.send(assoc).each do |m|
           if m.new_record?
-            one_assoc.push(m.attributes)
+            one_assoc.push(get_moderation_attributes(m))
           else
             one_assoc.push(m.id)
           end
@@ -140,11 +143,19 @@ module HasModerated
       assoc_attrs
     end
     
+    def get_moderation_attributes(model)
+      if model.respond_to?(:moderatable_hashize)
+        model.moderatable_hashize
+      else
+        model.attributes
+      end
+    end
+    
     def to_moderation_created options
       assoc_attrs = get_assocs_for_moderation(options)
 
       attr_value = {
-        :main_model => self.attributes,
+        :main_model => get_moderation_attributes(self),
         :associations => assoc_attrs
       }
       
@@ -182,7 +193,7 @@ module HasModerated
           if m.class == Fixnum
             one_assoc.push(m)
           elsif m.new_record?
-            one_assoc.push(m.attributes)
+            one_assoc.push(get_moderation_attributes(m))
           else
             one_assoc.push(m.id)
           end
@@ -201,6 +212,12 @@ module HasModerated
       end
       
       moderations
+    end
+    
+    def moderatable_updating
+      self.has_moderated_updating = true
+      yield(self)
+      self.has_moderated_updating = false
     end
   end
 end

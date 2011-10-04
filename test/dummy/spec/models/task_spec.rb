@@ -113,7 +113,7 @@ describe Task do
     Task.last.desc.should eq("Hollywood Hills")
   end
 
-  it "remembers associations to existing records" do
+  it "remembers associations to existing records on create" do
     subtask = Subtask.create! :title => "Bye Bye"
     Subtask.count.should eq(1)
 
