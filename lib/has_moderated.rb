@@ -56,6 +56,11 @@ module HasModerated
       end
     end
     
+    def moderation_creating &block
+      cattr_accessor :moderation_creating_hook
+      self.moderation_creating_hook = block
+    end
+    
     def has_moderated_create *options
       # Lazily include the instance methods so we don't clutter up
       # any more ActiveRecord models than we have to.
@@ -101,9 +106,22 @@ module HasModerated
         true
       end
     end
+    
+    def call_creating_hook moderation
+      if self.class.respond_to?(:moderation_creating_hook)
+        self.class.moderation_creating_hook.call(moderation)
+      end
+    end
+    
+    def create_moderation_with_hooks!(*args)
+      m = Moderation.new(*args)
+      call_creating_hook(m)
+      m.save!
+      m
+    end
 
     def to_moderation_destroyed
-      Moderation.create!({
+      create_moderation_with_hooks!({
         :moderatable_type => self.class.to_s,
         :moderatable_id => self.id,
         :attr_name => "-",
@@ -159,7 +177,7 @@ module HasModerated
         :associations => assoc_attrs
       }
       
-      Moderation.create!({
+      create_moderation_with_hooks!({
         :moderatable_type => self.class.to_s,
         :moderatable_id => self.id,
         :attr_name => "-",
@@ -172,7 +190,7 @@ module HasModerated
       self.changes.each_pair do |att_name, values|
         att_name = att_name.to_s
         if self.class.moderated_attributes.include?(att_name) && !(values[0].blank? && values[1].blank?)
-          moderations.push(Moderation.create!({
+          moderations.push(create_moderation_with_hooks!({
             :moderatable_type => self.class.to_s,
             :moderatable_id => self.id,
             :attr_name => att_name,
@@ -203,7 +221,7 @@ module HasModerated
 
       moderations = []
       if !assoc_attrs.empty?
-        moderations.push(Moderation.create!({
+        moderations.push(create_moderation_with_hooks!({
             :moderatable_type => self.class.to_s,
             :moderatable_id => self.id,
             :attr_name => "-",

@@ -49,7 +49,7 @@ module HasModerated
             end
             arec.send(fk.to_s+"=", rec.id) # set association to the newly created record
             attrs.each_pair do |key, val|
-              arec.send(key.to_s+"=", val) unless key.to_s == 'id'
+              arec.send(key.to_s+"=", val) unless key.to_s == 'id' || key.to_s == fk.to_s
             end
             # disable moderation for associated model (if moderated)
             arec.has_moderated_updating = true if arec.respond_to?("has_moderated_updating=")

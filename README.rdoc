@@ -99,7 +99,7 @@ in the root directory.
 == TODO
 
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
-
+Hook for "moderation_creating" where you can add extra information on the moderation
 == Problems
 
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
