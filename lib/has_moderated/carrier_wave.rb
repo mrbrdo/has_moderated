@@ -41,7 +41,7 @@ module HasModerated
       end
     
       def photo_tmp_file=(value)
-        self.photo.store!(File.open(value))
+        self.photo = File.open(value)
         HasModerated::CarrierWave::photo_tmp_delete(value)
       end
       
