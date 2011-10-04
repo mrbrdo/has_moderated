@@ -41,15 +41,16 @@ module HasModerated
         # PARAM = Hash (create)
           else
             arec = m.new
-            attrs.each_pair do |key, val|
-              arec.send(key.to_s+"=", val) unless key.to_s == 'id'
-            end
+            # set foreign key first, may be required sometimes
             fk = if assoc_details.respond_to?(:foreign_key)
               assoc_details.foreign_key
             else # Rails < v3.1
               assoc_details.primary_key_name
             end
             arec.send(fk.to_s+"=", rec.id) # set association to the newly created record
+            attrs.each_pair do |key, val|
+              arec.send(key.to_s+"=", val) unless key.to_s == 'id'
+            end
             # disable moderation for associated model (if moderated)
             arec.has_moderated_updating = true if arec.respond_to?("has_moderated_updating=")
             arec.save(:validate => false) # don't run validations
