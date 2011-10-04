@@ -11,10 +11,10 @@ module HasModerated
     end  
     
     def self.photo_tmp_delete(value)
-      FileUtils.rm(value) # remove temp file
       begin
+        FileUtils.rm(value) # remove temp file
         FileUtils.rmdir(File.expand_path("..", value)) # will only remove folder if empty
-      rescue Errno::ENOTEMPTY
+      rescue
       end
     end
 
