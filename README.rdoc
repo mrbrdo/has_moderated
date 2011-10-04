@@ -84,6 +84,44 @@ to discard (destroy) it, call
 
   moderation.discard
 
+== Special data attached to moderations
+
+If you need any special data attached to the Moderation model, you can use the moderation_creating hook.
+
+=== Example for moderation_creating hook
+
+For example you have a Comment model, and it is moderated. But your visitors are logged in when they post comments, so you want to add the user ID to the moderation.
+
+* first create a migration to add user_id into Moderation
+
+  rails g migration AddUserIdToModerations user_id:integer
+  
+and run rake db:migrate
+* in models/comment.rb, add something like this:
+  
+    attr_accessor :moderation_user_id
+    moderation_creating do |m|
+      m.user_id = self.moderation_user_id
+    end
+
+This is just one example on how to do it. You need the attr_accessor here because we are going to pass the user ID from the controller. In the hook you have access to the Moderation model just before it is saved, so you can modify it like any other model. Now just set moderation_user_id on the model before you save it:
+
+    c = Comment.new
+    c.moderation_user_id = current_user.id
+    c.save
+
+== CarrierWave support
+
+There is support for CarrierWave uploads to be moderated. You must put this line into the model that has a CarrierWave uploader mounted:
+
+  include HasModerated::CarrierWave
+
+Right now *you must use the field name "photo" for the upload filename* because it is currently hardcoded into this module. If you do this, then moderation for the photo should work correctly.
+
+It does not matter if this model has any moderation itself or if you just have an association to it from some other model that is moderated. You must include this module in either case, because it ensures proper serialization of the photo information.
+
+If you need some more customization look at this module in lib/has_moderated/carrier_wave.rb and just copy the methods into your model and customize them (with some care when you do this, some methods should be class methods).
+
 == Tests
 
 I've tested this project using RSpec. You can find the tests in
@@ -99,7 +137,6 @@ in the root directory.
 == TODO
 
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
-Hook for "moderation_creating" where you can add extra information on the moderation
 == Problems
 
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
