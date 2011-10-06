@@ -35,6 +35,7 @@ module HasModerated
 
         # all instances for this association type
         assoc_records.each do |attrs|
+          next if attrs.blank?
         # PARAM = ID
           if attrs.class == Fixnum
             arec = m.find_by_id(attrs)
