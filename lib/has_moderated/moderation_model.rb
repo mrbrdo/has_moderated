@@ -50,7 +50,7 @@ module HasModerated
               assoc_details.primary_key_name
             end
             arec.send(fk.to_s+"=", rec.id) # set association to the newly created record
-            attrs.each_pair do |key, val|
+            attrs && attrs.each_pair do |key, val|
               arec.send(key.to_s+"=", val) unless key.to_s == 'id' || key.to_s == fk.to_s
             end
             # disable moderation for associated model (if moderated)
