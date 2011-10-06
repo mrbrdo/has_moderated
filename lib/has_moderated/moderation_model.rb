@@ -25,6 +25,8 @@ module HasModerated
     end
     
     def update_associations_from_value rec
+      # in case it's empty
+      interpreted_value[:associations] ||= {}
       # loop association types, e.g. :comments
       interpreted_value[:associations].each_pair do |assoc_name, assoc_records|
         # read reflections attribute to determine proper class name and primary key

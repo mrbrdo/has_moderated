@@ -96,7 +96,7 @@ For example you have a Comment model, and it is moderated. But your visitors are
 
   rails g migration AddUserIdToModerations user_id:integer
   
-and run rake db:migrate
+* run rake db:migrate
 * in models/comment.rb, add something like this:
   
     attr_accessor :moderation_user_id
