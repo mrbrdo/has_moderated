@@ -109,7 +109,7 @@ module HasModerated
     
     def call_creating_hook moderation
       if self.class.respond_to?(:moderation_creating_hook)
-        self.class.moderation_creating_hook.call(moderation)
+        self.instance_exec moderation, &self.class.moderation_creating_hook
       end
     end
     
