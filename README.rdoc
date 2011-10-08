@@ -2,12 +2,14 @@
 
 == Installing
 
-  gem install has_moderated
-
-And add it to your project's Gemfile
+Add it to your project's Gemfile
 
   gem "has_moderated"
 
+and run
+
+  bundle install
+  
 To set up has_moderated in your project, use
 
   rails generate has_moderated:install
@@ -136,7 +138,34 @@ in the root directory.
 
 == TODO
 
+This is just for my personal todo list...
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
+Preview method which gives changed object but doesnt save it.
+
+For automagic associations, look at https://github.com/rails/rails/blob/master/activerecord/lib/active_record/associations/collection_association.rb method concat, concat_records, add_to_target
+u get the instance of this class from with .association("name")
+assoc = t.association(:subtasks)
+def assoc.concat *args ; whatever ; end
+or if we need block (capture outer scope)
+metaclass = class << assoc; self; end
+metaclass.send(:define_method, :concat) do
+   puts "concat 2"
+end
+
+in model use 
+after_initialize do...end
+to overwrite these methods
+ruby-1.8.7-p334 :013 > def assoc.concat_with_mo *args
+ruby-1.8.7-p334 :014?>   puts "in concat mo"
+ruby-1.8.7-p334 :015?>   concat_without_mo *args
+ruby-1.8.7-p334 :016?>   end
+ => nil 
+ruby-1.8.7-p334 :017 > assoc.class_eval do
+ruby-1.8.7-p334 :018 >     alias_method_chain :concat, :mo
+ruby-1.8.7-p334 :019?>   end
+use add_to_target!!! lowest lvl
+add something like has_moderated_association
+don't do anything on create (parent.new_record?) since we already handle that
 == Problems
 
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
