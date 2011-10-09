@@ -24,40 +24,81 @@ module HasModerated
       end
     end
     
-    def update_associations_from_value rec
+    def add_assoc_to_record arec, rec, assoc_name
+      return unless rec && arec
+      
+      assoc = rec.class.reflections[assoc_name.to_sym]
+      
+      if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank? 
+        arec.send(rec.class.to_s.underscore.pluralize) << rec
+      elsif assoc.macro == :has_many || assoc.macro == :has_one
+        arec.send(rec.class.to_s.underscore + "=", rec)
+        #fk = if assoc.respond_to?(:foreign_key)
+        #  assoc.foreign_key
+        #else # Rails < v3.1
+        #  assoc.primary_key_name
+        #end
+        #arec.send(fk.to_s+"=", rec.id)
+      end
+    end
+    
+    def try_moderatable_updating rec
+      rec.has_moderated_updating = true if rec.respond_to?("has_moderated_updating=")
+      yield(rec)
+      rec.has_moderated_updating = false if rec.respond_to?("has_moderated_updating=")
+    end
+    
+    def update_associations_from_value rec, interpreted_assocs = nil
+      interpreted_assocs ||= interpreted_value[:associations]
       # in case it's empty
-      interpreted_value[:associations] ||= {}
+      interpreted_assocs ||= {}
       # loop association types, e.g. :comments
-      interpreted_value[:associations].each_pair do |assoc_name, assoc_records|
+      interpreted_assocs.each_pair do |assoc_name, assoc_records|
         # read reflections attribute to determine proper class name and primary key
         assoc_details = rec.class.reflections[assoc_name.to_sym]
         m = assoc_details.class_name.constantize
+        
+        fk = if assoc_details.respond_to?(:foreign_key)
+          assoc_details.foreign_key
+        else # Rails < v3.1
+          assoc_details.primary_key_name
+        end
 
         # all instances for this association type
         assoc_records.each do |attrs|
           next if attrs.blank?
-        # PARAM = ID
-          if attrs.class == Fixnum
-            arec = m.find_by_id(attrs)
-            # add the association, if the record still existss
-            rec.send(assoc_name.to_s) << arec if arec
-        # PARAM = Hash (create)
-          else
-            arec = m.new
-            # set foreign key first, may be required sometimes
-            fk = if assoc_details.respond_to?(:foreign_key)
-              assoc_details.foreign_key
-            else # Rails < v3.1
-              assoc_details.primary_key_name
+          if attrs.class != Fixnum && !attrs[:id].blank?
+            attrs = attrs[:id].to_i
+          end
+          try_moderatable_updating(rec) do
+            arec = nil
+          # PARAM = ID
+            if attrs.class == Fixnum
+              arec = m.find_by_id(attrs)
+              add_assoc_to_record(arec, rec, assoc_name)
+          # PARAM = Hash (create)
+            else
+              arec = m.new
+              # set foreign key first, may be required sometimes
+              add_assoc_to_record(arec, rec, assoc_name)
+              attrs && attrs.each_pair do |key, val|
+                next if key.to_s == "associations" || key.to_s == 'id' || key.to_s == fk
+                arec.send(key.to_s+"=", val)
+              end
+              if attrs[:associations]
+                update_associations_from_value arec, attrs[:associations]
+              end
             end
-            arec.send(fk.to_s+"=", rec.id) # set association to the newly created record
-            attrs && attrs.each_pair do |key, val|
-              arec.send(key.to_s+"=", val) unless key.to_s == 'id' || key.to_s == fk.to_s
+            if arec
+              try_moderatable_updating(arec) do
+                arec.save(:validate => false) # don't run validations
+              end
+              if assoc_details.collection?
+                rec.send(assoc_name.to_s) << arec if arec
+              else
+                rec.send(assoc_name.to_s + "=", arec) if arec
+              end
             end
-            # disable moderation for associated model (if moderated)
-            arec.has_moderated_updating = true if arec.respond_to?("has_moderated_updating=")
-            arec.save(:validate => false) # don't run validations
-            arec.has_moderated_updating = false if arec.respond_to?("has_moderated_updating=")
           end
         end
       end

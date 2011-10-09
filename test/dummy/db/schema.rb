@@ -10,7 +10,39 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111004164509) do
+ActiveRecord::Schema.define(:version => 20111009205545) do
+
+  create_table "hjoin_tests", :force => true do |t|
+    t.string   "title"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "hjoin_tests_tasks", :id => false, :force => true do |t|
+    t.integer "task_id"
+    t.integer "hjoin_test_id"
+  end
+
+  create_table "hmanythrough_joins", :force => true do |t|
+    t.integer  "hmanythrough_test_id"
+    t.integer  "task_id"
+    t.string   "exdata"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "hmanythrough_tests", :force => true do |t|
+    t.string   "title"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "hone_tests", :force => true do |t|
+    t.integer  "task_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "title"
+  end
 
   create_table "hook_tests", :force => true do |t|
     t.string   "title"

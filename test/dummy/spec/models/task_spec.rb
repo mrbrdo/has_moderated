@@ -177,7 +177,7 @@ describe Task do
     Task.count.should eq(0)
   end
 
-  it "moderates new associations on existing records" do
+  it "moderates new associations on existing records (add_associations_moderated)" do
     t = Task.create! :title => "Bye Bye"
     Moderation.last.accept
 
@@ -194,7 +194,7 @@ describe Task do
     Task.first.subtasks.first.title.should eq("Hollywood Hills")
   end
 
-  it "moderates new associations to existing records on existing records" do
+  it "moderates new associations to existing records on existing records (add_associations_moderated)" do
     sub = Subtask.create! :title => "Hollywood Hills"
     t = Task.create! :title => "Bye Bye"
     Moderation.last.accept
@@ -210,5 +210,39 @@ describe Task do
     t.subtasks.count.should eq(1)
     Subtask.count.should eq(1)
     Task.first.subtasks.first.title.should eq("Hollywood Hills")
+  end
+  
+  it "moderates new associations with build" do
+    Task.create! :title => "Bye Bye"
+    Moderation.last.accept
+    
+    t = Task.last
+    t.subtasks.build :title => "Jo jo"
+    # TODO
+    # Moderation.count.should eq(0)
+    t.save
+    Moderation.count.should eq(1)
+    
+    Task.last.subtasks.count.should eq(0)
+    Moderation.last.accept
+    Task.last.subtasks.first.title.should eq("Jo jo")
+  end
+  
+  it "moderates associations to existing records with <<" do
+    Task.create! :title => "Bye Bye"
+    Moderation.last.accept
+    Subtask.create! :title => "Jo jo"
+    
+    Moderation.count.should eq(0)
+    
+    t = Task.first
+    t.subtasks << Subtask.first
+    
+    Task.first.subtasks.count.should eq(0)
+    Moderation.last.accept
+    
+    st = Task.first.subtasks.first
+    st.title.should eq("Jo jo")
+    st.id.should eq(Subtask.first.id)
   end
 end

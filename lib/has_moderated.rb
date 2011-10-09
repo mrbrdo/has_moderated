@@ -86,6 +86,56 @@ module HasModerated
       
       alias_method_chain :destroy, :moderated_check
     end
+    
+    def has_moderated_association *args
+      assocs = []
+      
+      unless args.blank?
+        if args == [:all]
+          assocs = self.reflections.keys.reject do |r|
+            r == :moderations
+          end
+        else
+          assocs = args
+          assocs = [assocs] unless assocs.respond_to?("[]")
+        end
+      end
+      
+      #TODO: should add to some class var and clean duplicates
+      
+      after_initialize do
+        assocs.each do |assoc_name|
+          assoc = self.association(assoc_name)
+          if assoc.reflection.collection?
+            def assoc.add_to_target_with_moderation record
+              if !owner.new_record? && !owner.has_moderated_updating
+                #TODO: add moderation
+                owner.add_associations_moderated(self.reflection.name => [record])
+                record
+              else
+                add_to_target_without_moderation record
+              end
+            end
+            assoc.class_eval do
+              alias_method_chain :add_to_target, :moderation
+            end
+          else
+            def assoc.replace_with_moderation(record, save = true)
+              if !owner.new_record? && !owner.has_moderated_updating
+                #TODO: add moderation
+                owner.add_associations_moderated(self.reflection.name => [record])
+                record
+              else
+                replace_without_moderation record
+              end
+            end
+            assoc.class_eval do
+              alias_method_chain :replace, :moderation
+            end
+          end
+        end
+      end
+    end
   end
   
   module InstanceMethods
@@ -129,13 +179,14 @@ module HasModerated
       })
     end
 
-    def get_assocs_for_moderation options
+    def get_assocs_for_moderation options, from_record = nil
+      from_record ||= self
       assocs = []
       
       unless options.blank?
         unless options[:with_associations].blank?
           if options[:with_associations] == :all
-            assocs = self.class.reflections.keys.reject do |r|
+            assocs = from_record.class.reflections.keys.reject do |r|
               r == :moderations
             end
           else
@@ -144,15 +195,36 @@ module HasModerated
           end
         end
       end
+      
+      # check for through assocs
+      assocs = assocs.dup
+      through_assocs = {}
+      assocs.each do |assoc|
+        join_model = from_record.class.reflections[assoc.to_sym].options[:through]
+        if join_model
+          join_model = join_model.to_sym
+          through_assocs[join_model] ||= []
+          through_assocs[join_model].push(assoc)
+          assocs.push(join_model) unless assocs.include?(join_model)
+          #assocs.delete(assoc)
+        end
+      end
 
       assoc_attrs = {}
       assocs.each do |assoc|
         one_assoc = []
-        self.send(assoc).each do |m|
+        assoc_value = from_record.send(assoc)
+        # if it's has_one it won't be an array
+        assoc_value = [assoc_value] if assoc_value && assoc_value.class != Array
+        assoc_value ||= []
+        assoc_value.each do |m|
           if m.new_record?
             one_assoc.push(get_moderation_attributes(m))
           else
             one_assoc.push(m.id)
+          end
+          if through_assocs[assoc.to_sym]
+            one_assoc.last[:associations] = get_assocs_for_moderation({ :with_associations => through_assocs[assoc.to_sym] }, m)
           end
         end
         assoc_attrs[assoc] = one_assoc unless one_assoc.empty?
@@ -204,6 +276,18 @@ module HasModerated
     end
 
     def add_associations_moderated assocs
+      # check for through assocs
+      from_record = self
+      through_assocs = {}
+      from_record.class.reflections.keys.each do |assoc|
+        join_model = from_record.class.reflections[assoc.to_sym].options[:through]
+        if join_model
+          join_model = join_model.to_sym
+          through_assocs[join_model] ||= []
+          through_assocs[join_model].push(assoc)
+        end
+      end
+      
       assoc_attrs = {}
       assocs.each_pair do |assoc_name, assoc|
         one_assoc = []
@@ -215,10 +299,13 @@ module HasModerated
           else
             one_assoc.push(m.id)
           end
+          if through_assocs[assoc_name.to_sym]
+            one_assoc.last[:associations] = get_assocs_for_moderation({ :with_associations => through_assocs[assoc_name.to_sym] }, m)
+          end
         end
         assoc_attrs[assoc_name] = one_assoc unless one_assoc.empty?
       end
-
+      
       moderations = []
       if !assoc_attrs.empty?
         moderations.push(create_moderation_with_hooks!({

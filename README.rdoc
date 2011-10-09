@@ -52,17 +52,19 @@ To moderate destruction of records, use
 
   has_moderated_destroy
 
+Warning! Always put has_many etc. BEFORE has_moderated calls in your model!
 == Moderating associations on existing records
-Sometimes you will want to moderate association changes for existing records, not only on create. Right now, there is only one way to do this and it's not as automagic as most of the other things. Instead of doing something like
+There is an automatic way to moderate associations on already-created records. Use:
 
-  post.comments << new_comment
-  post.scores << new_score
+  has_moderated_association :links, :comments
+  
+to moderate the links and comments associations. You can use :all to moderate all associations, but I recommend you explicitly specify them.
 
-You will *instead* have to call add_associations_moderated like so
+You can also manually add associations to moderation like so
 
   post.add_associations_moderated(:comments => [new_comment], :scores => [new_score])
 
-The values can be either new records (not in the database), existing records, or Fixnum (numerical) IDs. Please note you should not use .build to create new records, because if you call save on the parent model it will automatically create the record, bypassing moderation.
+The values can be either new records (not in the database), existing records, or Fixnum (numerical) IDs. Please note in this case you should not use .build to create new records, because if you call save on the parent model it will automatically create the record (this only applies if you use the manual way).
 
 == Manage moderations
 To see pending moderations, simply call
@@ -90,7 +92,7 @@ to discard (destroy) it, call
 
 If you need any special data attached to the Moderation model, you can use the moderation_creating hook.
 
-=== Example for moderation_creating hook
+=== Attaching user ID to moderations
 
 For example you have a Comment model, and it is moderated. But your visitors are logged in when they post comments, so you want to add the user ID to the moderation.
 
@@ -138,6 +140,8 @@ in the root directory.
 
 == TODO
 
+DONT save association when calling .build... only when calling save!
+
 This is just for my personal todo list...
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
 Preview method which gives changed object but doesnt save it.
@@ -166,6 +170,7 @@ ruby-1.8.7-p334 :019?>   end
 use add_to_target!!! lowest lvl
 add something like has_moderated_association
 don't do anything on create (parent.new_record?) since we already handle that
+test also for one-to-one and join table and has_many through assoc
 == Problems
 
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
