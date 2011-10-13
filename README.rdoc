@@ -123,6 +123,9 @@ There is support for CarrierWave uploads to be moderated. You must put this line
 Right now *you must use the field name "photo" for the upload filename* because it is currently hardcoded into this module. If you do this, then moderation for the photo should work correctly.
 
 It does not matter if this model has any moderation itself or if you just have an association to it from some other model that is moderated. You must include this module in either case, because it ensures proper serialization of the photo information.
+If you want to moderate changes to the photo on this model itself (e.g. not only when its associated to something else), add also
+
+  has_moderated :carrierwave_photo
 
 If you need some more customization look at this module in lib/has_moderated/carrier_wave.rb and just copy the methods into your model and customize them (with some care when you do this, some methods should be class methods).
 
@@ -171,6 +174,8 @@ use add_to_target!!! lowest lvl
 add something like has_moderated_association
 don't do anything on create (parent.new_record?) since we already handle that
 test also for one-to-one and join table and has_many through assoc
+
+fix tests for offline working
 == Problems
 
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
