@@ -32,7 +32,12 @@ module HasModerated
       if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank? 
         arec.send(rec.class.to_s.underscore.pluralize) << rec
       elsif assoc.macro == :has_many || assoc.macro == :has_one
-        arec.send(rec.class.to_s.underscore + "=", rec)
+        field = if assoc.options[:as]
+          assoc.options[:as].to_s
+        else
+          rec.class.to_s.underscore
+        end
+        arec.send(field + "=", rec)
         #fk = if assoc.respond_to?(:foreign_key)
         #  assoc.foreign_key
         #else # Rails < v3.1

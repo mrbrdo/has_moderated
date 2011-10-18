@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111009205545) do
+ActiveRecord::Schema.define(:version => 20111018172409) do
 
   create_table "hjoin_tests", :force => true do |t|
     t.string   "title"
@@ -32,6 +32,14 @@ ActiveRecord::Schema.define(:version => 20111009205545) do
   end
 
   create_table "hmanythrough_tests", :force => true do |t|
+    t.string   "title"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "hone_as_tests", :force => true do |t|
+    t.integer  "testable_id"
+    t.string   "testable_type"
     t.string   "title"
     t.datetime "created_at"
     t.datetime "updated_at"
