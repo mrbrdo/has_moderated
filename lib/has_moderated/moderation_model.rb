@@ -32,8 +32,17 @@ module HasModerated
       if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank? 
         arec.send(rec.class.to_s.underscore.pluralize) << rec
       elsif assoc.macro == :has_many || assoc.macro == :has_one
-        field = if assoc.options[:as]
+        field = if !assoc.options[:as].blank?
           assoc.options[:as].to_s
+        elsif !assoc.options[:foreign_key].blank?
+          fk = assoc.options[:foreign_key].to_s
+          results = arec.class.reflections.reject do |assoc_name, assoc|
+            !(assoc.options[:foreign_key] && assoc.options[:foreign_key].to_s == fk)
+          end
+          if results.blank?
+            raise "Please set foreign_key for both belongs_to and has_one/has_many!"
+          end
+          results.first[1].name.to_s
         else
           rec.class.to_s.underscore
         end
