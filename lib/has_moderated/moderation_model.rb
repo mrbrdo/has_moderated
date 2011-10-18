@@ -29,8 +29,20 @@ module HasModerated
       
       assoc = rec.class.reflections[assoc_name.to_sym]
       
-      if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank? 
-        arec.send(rec.class.to_s.underscore.pluralize) << rec
+      if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank?
+        field = if !assoc.options[:join_table].blank?
+          jointable = assoc.options[:join_table].to_s
+          results = arec.class.reflections.reject do |assoc_name, assoc|
+            !(assoc.options[:join_table] && assoc.options[:join_table].to_s == jointable)
+          end
+          if results.blank?
+            raise "has_moderated: Cannot determine join table for a Habtm association!"
+          end
+          results.first[1].name.to_s
+        else
+          rec.class.to_s.underscore.pluralize
+        end
+        arec.send(field) << rec
       elsif assoc.macro == :has_many || assoc.macro == :has_one
         field = if !assoc.options[:as].blank?
           assoc.options[:as].to_s
@@ -47,12 +59,6 @@ module HasModerated
           rec.class.to_s.underscore
         end
         arec.send(field + "=", rec)
-        #fk = if assoc.respond_to?(:foreign_key)
-        #  assoc.foreign_key
-        #else # Rails < v3.1
-        #  assoc.primary_key_name
-        #end
-        #arec.send(fk.to_s+"=", rec.id)
       end
     end
     

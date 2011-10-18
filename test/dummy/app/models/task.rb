@@ -3,6 +3,7 @@ class Task < ActiveRecord::Base
   has_many :subtasks
   has_many :task_photos
   has_and_belongs_to_many :hjoin_tests
+  has_and_belongs_to_many :habtms, :class_name => "HabtmNameTest"
   has_one :hone_test
   has_one :hone_as_test, :as => :testable
   has_many :hmanythrough_join
