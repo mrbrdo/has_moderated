@@ -15,7 +15,7 @@ module HasModerated
         self.moderated_options ||= {}
 
         args.each do |arg|
-          if arg.respond_to?("[]")
+          if arg.class == Hash || arg.class == HashWithIndifferentAccess
             self.moderated_options = self.moderated_options.merge(arg)
           else
             self.moderated_attributes.push(arg.to_s)

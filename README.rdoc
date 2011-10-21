@@ -26,6 +26,17 @@ When upgrading, rerun the generator
   rails generate has_moderated:install
 
 If there is a new migration file and you have filename conflicts, remove the old one and apply the new one, in case the schema changed.
+
+== Why use this instead of something like Papertrail?
+
+Papertrail and vestal_versions for example, are designed not for moderation, but for tracking changes on models. If you use Papertrail for moderating, you will always have the "newest" version in the database, while previous changes will be recorded in a special table. The problem with this for moderation is that when you are showing records, you have to read from both the model table and the "changes" table in the database, and do additional processing to combine them. This will impact performance quite a bit.
+
+In contrast, with this gem the database will always represent the last accepted/confirmed version of the model, and not necessarily the newest as with Paperclip. A "changes" table like in Paperclip is used here too, but it is used to store "suggested" (to-be-accepted) changes. Therefore you have no performance hit when querying for the last accepted version of the model, like you would have with Paperclip. You only have a performance hit when accepting a moderation, but this is irrelevant. Also this way all changes submitted are relative to the currently last accepted version and not to the newest version like in Paperclip.
+
+So Paperclip and vestal_versions are designed for model versioning and changes tracking, while this gem is designed for moderation. The database will not be changed until a moderation is actually accepted.
+
+Note that because of this, handling associations is quite a bit harder, so this gem is a little bit more complex. Therefore is recommended you test moderated associations before deploying to production, to avoid any possible bugs.
+
 == Usage
 To moderate one or more attributes, add
 
@@ -98,7 +109,7 @@ For example you have a Comment model, and it is moderated. But your visitors are
 
 * first create a migration to add user_id into Moderation
 
-  rails g migration AddUserIdToModerations user_id:integer
+    rails g migration AddUserIdToModerations user_id:integer
   
 * run rake db:migrate
 * in models/comment.rb, add something like this:
@@ -139,7 +150,7 @@ You can run the tests by running
 
   rake spec
 
-in the root directory.
+in the root directory of this gem (so you have to clone it first).
 
 == TODO
 
@@ -149,8 +160,12 @@ Preview method which gives changed object but doesnt save it.
 
 == Problems
 
+If you have problems open an issue here on Github.
+
 You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
 If you have a problem like that you can extract the problematic attributes into a seperate has_one association. If you moderate create, save that model without the foreign key first, and then use has_moderated_create :with_associations => [:association_name] and add the association (to the existing associated model) before saving the moderated model. If you have questions about this or don't understand what I mean, open an issue here at GitHub and I will explain it further.
+
+It is also possible you will encounter problems with some heavily customized associations, or with has_many :through associations (although I have tested this for a simple, ordinary case and it works). If that happens open an issue here on Github.
 
 == License
 

@@ -33,4 +33,22 @@ describe HjoinTest do
     Task.first.hjoin_tests.count.should eq(1)
     Task.first.hjoin_tests.first.title.should eq("HJoin")
   end
+  
+  it "moderates assoc to existing" do
+    t = Task.new :title => "Test"
+    t.save
+    Moderation.last.accept
+    
+    hjt = HjoinTest.create! :title => "Existing"
+    HjoinTest.count.should eq(1)
+    
+    t = Task.first
+    t.hjoin_tests << hjt
+    Task.first.hjoin_tests.count.should eq(0)
+    
+    Moderation.last.accept
+        
+    Task.first.hjoin_tests.count.should eq(1)
+    Task.first.hjoin_tests.first.title.should eq("Existing")
+  end
 end
