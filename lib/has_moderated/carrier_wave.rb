@@ -23,9 +23,15 @@ module HasModerated
       # here we can delete the photo from tmp
       def moderatable_discard(moderation)
         value = moderation.interpreted_value
-        if value && value.respond_to?("[]") &&
+        if moderation.attr_name == "-" && value && value.respond_to?("[]") &&
           value[:main_model] && value[:main_model][:photo_tmp_file]
-          HasModerated::CarrierWave::photo_tmp_delete(value[:main_model][:photo_tmp_file])
+          value = value[:main_model][:photo_tmp_file]
+        elsif moderation.attr_name != "photo_tmp_file"
+          return # we dont want to process anything else than the above
+        end
+          
+        unless value.blank?
+          HasModerated::CarrierWave::photo_tmp_delete(value)
         end
       end
     end
