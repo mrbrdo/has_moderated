@@ -12,7 +12,17 @@ module HasModerated
     
     def self.photo_tmp_delete(value)
       begin
-        FileUtils.rm(value) # remove temp file
+        dirname = File.expand_path("..", value)
+        filename = File.basename(value)
+        # must delete versions as well, the filename of versions
+        # should be version_filename.ext, where version is the name
+        # of the version (e.g. thumb_test.png)
+        r = Regexp.new("#{filename}\\Z")
+        Dir.foreach(dirname) do |f|
+          if f =~ r
+            FileUtils.rm("#{dirname}/#{f}") # remove temp file
+          end
+        end
         FileUtils.rmdir(File.expand_path("..", value)) # will only remove folder if empty
       rescue
       end

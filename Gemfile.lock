@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    has_moderated (0.0.29)
+    has_moderated (0.0.30)
       rails (>= 3.0.0)
 
 GEM
@@ -84,6 +84,7 @@ GEM
     rbx-require-relative (0.0.5)
     rdoc (3.12)
       json (~> 1.4)
+    rmagick (2.13.1)
     rspec (2.8.0)
       rspec-core (~> 2.8.0)
       rspec-expectations (~> 2.8.0)
@@ -122,6 +123,7 @@ DEPENDENCIES
   factory_girl
   has_moderated!
   rails3-generators
+  rmagick
   rspec
   rspec-rails
   ruby-debug
