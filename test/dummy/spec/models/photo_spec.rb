@@ -52,4 +52,18 @@ describe Photo do
     photo = Photo.first
     assert_photo_uploaded(photo.photo)
   end
+  
+  it "should not create new moderation when changing related model (issue 6)" do
+    photo = Photo.create!(:photo => carrierwave_test_photo)
+    Moderation.last.accept
+    
+    Moderation.count.should eq(0)
+    
+    photo = Photo.first
+    
+    photo.photo_relateds.build(:data => "lala")
+    photo.save
+    
+    Moderation.count.should eq(0)
+  end
 end

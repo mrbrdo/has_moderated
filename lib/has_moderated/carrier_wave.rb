@@ -54,7 +54,7 @@ module HasModerated
       def store_photo_with_moderation!
         is_moderated = self.class.respond_to?(:moderated_attributes) &&
           self.class.moderated_attributes.include?("carrierwave_photo")
-        if self.has_moderated_updating || !is_moderated
+        if self.has_moderated_updating || !is_moderated || !self.photo_changed?
           store_photo_without_moderation!
         else
           self.moderations.create!({
@@ -67,7 +67,7 @@ module HasModerated
       def write_photo_identifier_with_moderation
         is_moderated = self.class.respond_to?(:moderated_attributes) &&
           self.class.moderated_attributes.include?("carrierwave_photo")
-        if self.has_moderated_updating || !is_moderated
+        if self.has_moderated_updating || !is_moderated || !self.photo_changed?
           write_photo_identifier_without_moderation
         end
       end

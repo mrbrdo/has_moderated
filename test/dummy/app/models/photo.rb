@@ -4,4 +4,5 @@ class Photo < ActiveRecord::Base
   has_moderated_create
   has_moderated :carrierwave_photo
   include HasModerated::CarrierWave
+  has_many :photo_relateds
 end

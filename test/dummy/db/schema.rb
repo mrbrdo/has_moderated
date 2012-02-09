@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111018180207) do
+ActiveRecord::Schema.define(:version => 20120209045206) do
 
   create_table "habtm_name_tests", :force => true do |t|
     t.string   "title"
@@ -88,6 +88,13 @@ ActiveRecord::Schema.define(:version => 20111018180207) do
 
   create_table "photo_holders", :force => true do |t|
     t.string   "title"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "photo_relateds", :force => true do |t|
+    t.integer  "photo_id"
+    t.string   "data"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
