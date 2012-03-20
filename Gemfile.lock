@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    has_moderated (0.0.34)
+    has_moderated (0.0.50)
       rails (>= 3.0.0)
 
 GEM
