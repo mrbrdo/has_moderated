@@ -245,4 +245,28 @@ describe Task do
     st.title.should eq("Jo jo")
     st.id.should eq(Subtask.first.id)
   end
+  
+  it "should moderate removing an association" do
+    t = Task.new :title => "Test"
+    t.subtasks.build :title => "HJoin"
+    t.subtasks.build :title => "HJoin2"
+    t.save
+    Moderation.last.accept
+    
+    Task.count.should eq(1)
+    t = Task.first
+    t.subtasks.count.should eq(2)
+    
+    first_subtask = t.subtasks.first
+    t.subtasks.delete(first_subtask)
+    
+    t = Task.first
+    t.subtasks.count.should eq(2)
+    Moderation.count.should eq(1)
+    
+    Moderation.last.accept
+    t = Task.first
+    t.subtasks.count.should eq(1)
+    t.subtasks.first.title.should_not eq(first_subtask.title)
+  end
 end

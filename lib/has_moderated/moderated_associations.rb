@@ -30,8 +30,18 @@ module HasModerated
                   add_to_target_without_moderation record
                 end
               end
+              def assoc.delete_records_with_moderation(records, method) # method comes from :dependent => :destroy
+                if !owner.new_record? && !owner.has_moderated_updating
+                  #todo only care for records which are already in database
+                  record_ids = records.map(&:id)
+                  owner.delete_associations_moderated(self.reflection.name => record_ids)
+                else
+                  delete_records_without_moderation(records, method)
+                end
+              end
               assoc.class_eval do
                 alias_method_chain :add_to_target, :moderation
+                alias_method_chain :delete_records, :moderation
               end
             else
               def assoc.replace_with_moderation(record, save = true)

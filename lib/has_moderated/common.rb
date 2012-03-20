@@ -12,10 +12,10 @@ module HasModerated
         m
       end
       
-      def moderatable_updating
-        self.has_moderated_updating = true
+      def moderatable_updating(disable_moderation = true)
+        self.has_moderated_updating = true if disable_moderation
         yield(self)
-        self.has_moderated_updating = false
+        self.has_moderated_updating = false if disable_moderation
       end
       
       def get_moderation_attributes(model)
@@ -64,6 +64,20 @@ module HasModerated
               :moderatable_id => self.id,
               :attr_name => "-",
               :attr_value => { :associations => assoc_attrs }
+            }))
+        end
+
+        moderations
+      end
+      
+      def delete_associations_moderated(assocs)
+        moderations = []
+        if !assocs.empty?
+          moderations.push(create_moderation_with_hooks!({
+              :moderatable_type => self.class.to_s,
+              :moderatable_id => self.id,
+              :attr_name => "-",
+              :attr_value => { :delete_associations => assocs }
             }))
         end
 

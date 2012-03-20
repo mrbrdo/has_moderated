@@ -64,6 +64,7 @@ To moderate destruction of records, use
   has_moderated_destroy
 
 Warning! Always put has_many etc. BEFORE has_moderated calls in your model!
+
 == Moderating associations on existing records
 There is an automatic way to moderate associations on already-created records. Use:
 
@@ -76,6 +77,8 @@ You can also manually add associations to moderation like so
   post.add_associations_moderated(:comments => [new_comment], :scores => [new_score])
 
 The values can be either new records (not in the database), existing records, or Fixnum (numerical) IDs. Please note in this case you should not use .build to create new records, because if you call save on the parent model it will automatically create the record (this only applies if you use the manual way).
+
+Moderation for removing associated records from existing records was added in version 0.0.32 (automatic).
 
 == Manage moderations
 To see pending moderations, simply call
@@ -98,6 +101,15 @@ To accept a moderation, call
 to discard (destroy) it, call
 
   moderation.discard
+
+== Bypassing moderation
+To bypass moderation (e.g. for admin users), wrap your code into moderatable_updating like so:
+
+  record.moderatable_updating(current_user.is_admin?)
+    record.update_attributes(...)
+  end
+
+If the parameter is false, then it will have no effect. If the parameter is true, then moderations will be disabled for code inside the passed block. The parameter is optional and defaults to true.
 
 == Special data attached to moderations
 

@@ -24,6 +24,48 @@ module HasModerated
       end
     end
     
+    def delete_assoc_from_record arec, rec, assoc_name
+      return unless rec && arec
+      
+      assoc = rec.class.reflections[assoc_name.to_sym]
+      
+      if assoc.macro == :has_and_belongs_to_many || !assoc.options[:through].blank? || assoc.macro == :has_many
+        rec.send(assoc_name).delete(arec)
+      else
+        raise "Cannot delete association for this type of associations!"
+      end
+    end
+    
+    def delete_associations_from_value rec, interpreted_assocs = nil
+      interpreted_assocs ||= interpreted_value[:delete_associations]
+      # in case it's empty
+      interpreted_assocs ||= {}
+      
+      interpreted_assocs.each_pair do |assoc_name, assoc_records|
+        # read reflections attribute to determine proper class name and primary key
+        assoc_details = rec.class.reflections[assoc_name.to_sym]
+        m = assoc_details.class_name.constantize
+        
+        fk = if assoc_details.respond_to?(:foreign_key)
+          assoc_details.foreign_key
+        else # Rails < v3.1
+          assoc_details.primary_key_name
+        end
+
+        # all instances for this association type
+        assoc_records.each do |attrs|
+          next if attrs.blank?
+          next if attrs.class != Fixnum
+          try_moderatable_updating(rec) do
+            arec = nil
+          # PARAM = ID
+            arec = m.find_by_id(attrs)
+            delete_assoc_from_record(arec, rec, assoc_name)
+          end
+        end
+      end
+    end
+    
     def add_assoc_to_record arec, rec, assoc_name
       return unless rec && arec
       
@@ -145,6 +187,7 @@ module HasModerated
 
         # check for saved associated records
         update_associations_from_value rec
+        delete_associations_from_value rec
         
         self.destroy # destroy this moderation since it has been applied
         rec
