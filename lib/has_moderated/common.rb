@@ -4,27 +4,55 @@ module HasModerated
       base.send :include, InstanceMethods
     end
     
+    def self.init(klass)
+      # TODO: do this only once
+      klass.class_eval do
+        attr_accessor :moderation_disabled
+        @@moderation_disabled = false
+        has_many :moderations, :as => :moderatable, :dependent => :destroy
+      end
+    end
+    
+    def self.foreign_key(reflection)
+      if reflection.respond_to?(:foreign_key)
+        reflection.foreign_key
+      else # Rails < v3.1
+        reflection.primary_key_name
+      end
+    end
+    
+    def self.try_disable_moderation rec
+      # TODO: fix this, this method should only be avail. to moderated models
+      if rec.respond_to?(:moderation_disabled)
+        rec.disable_moderation(true) { |rec| yield(rec) }
+      else
+        yield(rec)
+      end
+    end
+    
     module InstanceMethods
+      
+      def disable_moderation(disable_moderation = true)
+        raise "moderation already disabled - illegal nesting" if self.moderation_disabled && disable_moderation
+        self.moderation_disabled = true if disable_moderation
+        yield(self)
+        self.moderation_disabled = false if disable_moderation
+      end
+      
+      def get_moderation_attributes
+        self.attributes
+      end
+      
       def create_moderation_with_hooks!(*args)
-        m = Moderation.new(*args)
+        m = self.moderations.build(*args)
         HasModerated::Common::call_creating_hook(self, m)
         m.save!
         m
       end
       
-      def moderatable_updating(disable_moderation = true)
-        self.has_moderated_updating = true if disable_moderation
-        yield(self)
-        self.has_moderated_updating = false if disable_moderation
-      end
+      ##
       
-      def get_moderation_attributes(model)
-        if model.respond_to?(:moderatable_hashize)
-          model.moderatable_hashize
-        else
-          model.attributes
-        end
-      end
+      
       
       def add_associations_moderated assocs
         # check for through assocs
@@ -135,6 +163,7 @@ module HasModerated
     end
     
     def self.call_creating_hook model, moderation
+      #todo use model.class.moderation_hooks[:creating_moderation]
       if model.class.respond_to?(:moderation_creating_hook)
         model.instance_exec moderation, &(model.class.moderation_creating_hook)
       end

@@ -167,6 +167,9 @@ in the root directory of this gem (so you have to clone it first).
 == TODO
 
 This is just for my personal todo list...
+
+make hasone, hasmany etc. each a separate "extension" (like carrierwave). for tests just use 2 models (task, subtask) and dont define has_many in model but in test
+
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
 Preview method which gives changed object but doesnt save it.
 

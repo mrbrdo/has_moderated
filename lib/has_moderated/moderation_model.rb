@@ -167,6 +167,11 @@ module HasModerated
     end
     
     def accept
+      loaded_val = YAML::load(attr_value)
+      HasModerated::Associations::Base::ApplyModeration::apply(self.moderatable, loaded_val[:associations])
+      self.destroy
+      
+      return
       # DESTROY
       if attr_name == '-' && attr_value.class == String && attr_value == "destroy"
         moderatable.moderatable_updating { moderatable.destroy }
