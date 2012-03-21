@@ -2,7 +2,15 @@ module HasModerated
   module Associations
     module Base
       
+      # Class methods included into ActiveRecord::Base so that you can call them in
+      # your ActiveRecord models.
       module ClassMethods
+        
+        # Will moderate the passed in associations if they are supported.
+        # Example: has_moderated_association(:posts, :comments).
+        # Also supports passing :all to moderate all associations, but I personally
+        # do not recommend using this option.
+        # @param [Hash] associations the associations to moderate
         def has_moderated_association(*args)
           # some common initialization (lazy loading)
           HasModerated::Common::init(self)
@@ -34,7 +42,8 @@ module HasModerated
       end # module
       
       module CreateModeration
-        # convert records to an array of record ids or attribute hashes
+        # Convert records to an array of record ids or attribute hashes.
+        # This is serialized to YAML and saved as moderation data in the database.
         def self.hashize_association_records records
           records.map do |record|
             if record.class == Fixnum   # id

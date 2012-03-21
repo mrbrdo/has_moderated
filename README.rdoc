@@ -168,6 +168,18 @@ in the root directory of this gem (so you have to clone it first).
 
 This is just for my personal todo list...
 
+hm maybe has_moderated_association could be just a has_moderated_create on the assoc? just check stuff like if task_id is not nil or something. could be much easier to implement then
+
+also maybe use dirty https://github.com/rails/rails/blob/master/activemodel/lib/active_model/dirty.rb
+
+and provide the same interface to show changes before accepting a moderation (just overwrite the dirty methods on the instance, also overwrite save at a low level to throw exception since its only a preview)
+
+to make it possible to support other than activerecord, use activemodel when its possible AND try to make it so its possible to call the last step before activerecord (e.g. a func that reads all the values of current attributes and figures out which ones changed) - and use this in activerecord.
+
+use YARD for docs
+check again railscasts episodes for gems (e.g. railties)
+-
+
 make hasone, hasmany etc. each a separate "extension" (like carrierwave). for tests just use 2 models (task, subtask) and dont define has_many in model but in test
 
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
