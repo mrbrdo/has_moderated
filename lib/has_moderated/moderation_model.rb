@@ -2,7 +2,7 @@ module HasModerated
   module ModerationModel
     
     def interpreted_value
-      @interpreted_value ||= if attr_name == '-'
+      @interpreted_value ||= if create?
         YAML::load(attr_value)
       else
         attr_value
@@ -168,12 +168,12 @@ module HasModerated
     
     def accept
       # DESTROY
-      if attr_name == '-' && attr_value.class == String && attr_value == "destroy"
+      if destroy?
         moderatable.moderatable_updating { moderatable.destroy }
         self.destroy
       
       # CREATE or ASSOCIATIONS
-      elsif attr_name == '-'
+      elsif create?
         loaded_val = YAML::load(attr_value)
         # case: moderated existance (new record)
         if moderatable_id.blank?
@@ -209,6 +209,18 @@ module HasModerated
         klass.moderatable_discard(self) if klass.respond_to?(:moderatable_discard)
       end
       self.destroy
+    end
+
+    def destroy?
+      attr_name == '-' && attr_value.class == String && attr_value == "destroy"
+    end
+
+    def create?
+      !destroy? && attr_name == '-'
+    end
+
+    def update?
+      !destroy? && !create?
     end
   end
 end
