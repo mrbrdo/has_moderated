@@ -4,13 +4,17 @@ class CreateModerations < ActiveRecord::Migration
       Moderation.all.each { |m| m.accept }
       drop_table :moderations
     end
-    create_table "moderations" do |t|
-      t.integer "moderatable_id",  :null => true
-      t.string  "moderatable_type",  :null => true
-      t.string  "attr_name",    :limit => 60,  :null => false
-      t.text    "attr_value",  :null => false
+
+    create_table :moderations do |t|
+      t.integer :moderatable_id,   :null => true
+      t.string  :moderatable_type, :null => false
+      t.string  :attr_name,        :null => false, :limit => 60
+      t.text    :attr_value,       :null => false
       t.timestamps
     end
+
+    add_index :moderations, :moderatable_type
+    add_index :moderations, [:moderatable_type, :moderatable_id]
   end
 
   def self.down
