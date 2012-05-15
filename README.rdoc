@@ -105,7 +105,7 @@ Do not use moderation.destroy, because discard triggers certain callbacks which 
 == Bypassing moderation
 To bypass moderation (e.g. for admin users), wrap your code into without_moderation like so:
 
-  record.without_moderation(current_user.is_admin?)
+  record.without_moderation(current_user.is_admin?) do
     record.update_attributes(...)
   end
 
