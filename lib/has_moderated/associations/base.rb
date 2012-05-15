@@ -49,10 +49,10 @@ module HasModerated
       
         def self.add_assoc_to_record(to, assoc_id, reflection)
           return unless to && assoc_id
-
+          
+          # TODO has_one weirness?
           if reflection.macro == :has_many
-            HasModerated::Associations::Collection::add_assoc_to_record(to, assoc_id, reflection)
-            # ok
+            HasModerated::Associations::Collection::AssociationHelpers::add_assoc_to_record(to, assoc_id, reflection)
           end
         end
         
@@ -62,7 +62,7 @@ module HasModerated
           if reflection.macro == :has_one
             HasModerated::Associations::HasOne::AssociationHelpers::delete_assoc_from_record(from, assoc_id, reflection)
           else
-            HasModerated::Associations::Collection::delete_assoc_from_record(from, assoc_id, reflection)
+            HasModerated::Associations::Collection::AssociationHelpers::delete_assoc_from_record(from, assoc_id, reflection)
           end
         end
       

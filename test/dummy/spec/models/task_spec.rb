@@ -258,9 +258,11 @@ describe Task do
       Moderation.count.should eq(0)
       task.renamed_subtask = Subtask.new :title => "Subtask 1"
       task.save
+      debugger
     
       task = Task.first
       task.renamed_subtask.should be_nil
+      Subtask.count.should eq(0)
     
       Moderation.count.should eq(1)
       Moderation.last.accept

@@ -50,6 +50,7 @@ module HasModerated
           end
       end
       
+      module AssociationHelpers
         def self.add_assoc_to_record_habtm_hmt(target, assoc_record, reflection)
           field = if reflection.options[:join_table].present?
             join_table = reflection.options[:join_table].to_s
@@ -116,6 +117,7 @@ module HasModerated
             raise "Cannot delete association for this type of associations!"
           end
         end
+      end
     end
   end
 end
