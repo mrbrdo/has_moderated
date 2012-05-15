@@ -289,7 +289,7 @@ describe Task do
       subtask.title.should eq("Subtask 1")
     end
     
-    it "set subtask to nil" do
+    it "set subtask to nil (delete)" do
       task = Task.create! :title => "Task 1"
       task.renamed_subtask = Subtask.new :title => "Subtask 1"
       task.save

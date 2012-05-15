@@ -25,7 +25,7 @@ When upgrading, rerun the generator
 
   rails generate has_moderated:install
 
-If there is a new migration file and you have filename conflicts, remove the old one and apply the new one, in case the schema changed.
+If there is a new migration file and you have filename conflicts, remove the old one and apply the new one, in case the schema changed. This is especially important if you are upgrading from a previous version to v1.x.
 
 == Why use this instead of something like Papertrail?
 
@@ -65,20 +65,18 @@ To moderate destruction of records, use
 
 Warning! Always put has_many etc. BEFORE has_moderated calls in your model!
 
-== Moderating associations on existing records
-There is an automatic way to moderate associations on already-created records. Use:
+== Moderating associations
+To moderate associations use:
 
   has_moderated_association :links, :comments
   
 to moderate the links and comments associations. You can use :all to moderate all associations, but I recommend you explicitly specify them.
 
-You can also manually add associations to moderation like so
+Be especially careful if you are moderating a has_many :through association. In this case, you must moderate both associations. For example:
 
-  post.add_associations_moderated(:comments => [new_comment], :scores => [new_score])
-
-The values can be either new records (not in the database), existing records, or Fixnum (numerical) IDs. Please note in this case you should not use .build to create new records, because if you call save on the parent model it will automatically create the record (this only applies if you use the manual way).
-
-Moderation for removing associated records from existing records was added in version 0.0.32 (automatic).
+  has_many :bookshelves
+  has_many :books, :through => :bookshelves
+  has_moderated_association :bookshelves, :books
 
 == Manage moderations
 To see pending moderations, simply call
@@ -90,9 +88,9 @@ You can also see moderations for a specific record. For example, if you have Pos
   post = Post.first
   post.moderations
   
-Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data (attr_value) is serialized in YAML format and can be deserialized by calling
+Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data is serialized in YAML format and can be deserialized by calling
 
-  YAML::load(moderation.attr_value)
+  YAML::load(moderation.data)
 
 To accept a moderation, call
 
@@ -101,11 +99,13 @@ To accept a moderation, call
 to discard (destroy) it, call
 
   moderation.discard
+  
+Do not use moderation.destroy, because discard triggers certain callbacks which may be necessary.
 
 == Bypassing moderation
-To bypass moderation (e.g. for admin users), wrap your code into moderatable_updating like so:
+To bypass moderation (e.g. for admin users), wrap your code into without_moderation like so:
 
-  record.moderatable_updating(current_user.is_admin?)
+  record.without_moderation(current_user.is_admin?)
     record.update_attributes(...)
   end
 
@@ -131,7 +131,7 @@ For example you have a Comment model, and it is moderated. But your visitors are
       m.user_id = self.moderation_user_id
     end
 
-This is just one example on how to do it. You need the attr_accessor here because we are going to pass the user ID from the controller. In the hook you have access to the Moderation model just before it is saved, so you can modify it like any other model. Now just set moderation_user_id on the model before you save it:
+This is just one example how you can do it. You need the attr_accessor here because we are going to pass the user ID from the controller. In the hook you have access to the Moderation model just before it is saved, so you can modify it like any other model. Now just set moderation_user_id on the model before you save it:
 
     c = Comment.new
     c.moderation_user_id = current_user.id
@@ -164,9 +164,16 @@ You can run the tests by running
 
 in the root directory of this gem (so you have to clone it first).
 
-== NOTES
-- to moderate has_many :through assoc, must add both associations to moderation
-== TODO
+== Problems
+
+If you have problems open an issue here on Github.
+
+You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
+If you have a problem like that you can extract the problematic attributes into a seperate has_one association. If you moderate create, save that model without the foreign key first, and then use has_moderated_create :with_associations => [:association_name] and add the association (to the existing associated model) before saving the moderated model. If you have questions about this or don't understand what I mean, open an issue here at GitHub and I will explain it further.
+
+It is also possible you will encounter problems with some heavily customized associations, or with has_many :through associations (although I have tested this for a simple, ordinary case and it works). If that happens open an issue here on Github.
+
+== My personal TODO (ignore this)
 
 This is just for my personal todo list...
 
@@ -186,15 +193,6 @@ make hasone, hasmany etc. each a separate "extension" (like carrierwave). for te
 
 Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
 Preview method which gives changed object but doesnt save it.
-
-== Problems
-
-If you have problems open an issue here on Github.
-
-You may encounter problems with models that have some sort of non-serializable attributes. This might be something like file attachments, you'll have to try it to see.
-If you have a problem like that you can extract the problematic attributes into a seperate has_one association. If you moderate create, save that model without the foreign key first, and then use has_moderated_create :with_associations => [:association_name] and add the association (to the existing associated model) before saving the moderated model. If you have questions about this or don't understand what I mean, open an issue here at GitHub and I will explain it further.
-
-It is also possible you will encounter problems with some heavily customized associations, or with has_many :through associations (although I have tested this for a simple, ordinary case and it works). If that happens open an issue here on Github.
 
 == License
 
