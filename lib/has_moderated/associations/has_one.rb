@@ -7,7 +7,11 @@ module HasModerated
           if owner.new_record? || owner.moderation_disabled
             replace_without_moderation record
           else
-            HasModerated::Associations::Base::CreateModeration::add_associations_moderation(owner, self.reflection.name => [record])
+            if record.blank? # use dummy value so it's not nil
+              owner.delete_associations_moderated(self.reflection.name => [1])
+            else
+              owner.add_associations_moderated(self.reflection.name => [record])
+            end
             record
           end
         end
@@ -18,6 +22,11 @@ module HasModerated
         HasModerated::Associations::HasMany::add_assoc_to_record(*args)
       end
       
+      def self.delete_assoc_from_record(from, assoc_id, reflection)
+        from.send("#{reflection.name}=", nil)
+        from.save # TODO necessary?
+      end
+      
       module ClassMethods
         protected
           def has_moderated_has_one_association(reflection)
@@ -26,8 +35,8 @@ module HasModerated
               # check association type
               if !reflection.collection?
                 # patch methods to moderate changes
-                assoc.class.send(:include, AssociationPatches)
                 assoc.class_eval do
+                  include AssociationPatches
                   alias_method_chain :replace, :moderation
                 end
               else

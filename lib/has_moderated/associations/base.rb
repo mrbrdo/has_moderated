@@ -41,53 +41,34 @@ module HasModerated
         end
       end # module
       
-      module CreateModeration
-        # Convert records to an array of record ids or attribute hashes.
-        # This is serialized to YAML and saved as moderation data in the database.
-        def self.hashize_association_records records
-          records.map do |record|
-            if record.class == Fixnum   # id
-              record
-            elsif record.kind_of? Hash  # already a hash (for has_many :through association)
-              record
-            elsif record.respond_to?(:new_record?) # is ActiveRecord class? TODO: check nicer
-              record.get_moderation_attributes
-            else
-              raise "don't know how to convert #{record.class} to hash"
-            end
-          end
-        end
-      
-        def self.add_associations_moderation to, assocs_hash
-          # convert records to correct format
-          assocs_hash.keys.each do |name|
-            assocs_hash[name] = hashize_association_records(assocs_hash[name])
-          end
-          to.create_moderation_with_hooks!({
-              :attr_name => "-",
-              :attr_value => { :associations => assocs_hash }
-            })
-        end
-      end
-      
       module ApplyModeration
         # just a helper
-        def self.try_disable_moderation(*args, &block)
-          HasModerated::Common::try_disable_moderation(*args, &block)
+        def self.try_without_moderation(*args, &block)
+          HasModerated::Common::try_without_moderation(*args, &block)
         end
       
-        def self.add_assoc_to_record(to, record, reflection)
-          return unless to && record
+        def self.add_assoc_to_record(to, assoc_id, reflection)
+          return unless to && assoc_id
 
           if reflection.macro == :has_many
-            HasModerated::Associations::HasMany::add_assoc_to_record(to, record, reflection)
+            HasModerated::Associations::HasMany::add_assoc_to_record(to, assoc_id, reflection)
             # ok
+          end
+        end
+        
+        def self.delete_assoc_from_record(from, assoc_id, reflection)
+          return unless from && assoc_id
+
+          if reflection.macro == :has_one
+            HasModerated::Associations::HasOne::delete_assoc_from_record(from, assoc_id, reflection)
+          else
+            HasModerated::Associations::HasMany::delete_assoc_from_record(from, assoc_id, reflection)
           end
         end
       
         def self.apply_add_association(to, reflection, attrs)
           klass = reflection.class_name.constantize
-          fk = HasModerated::Common::foreign_key(reflection)
+          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection)
         
           attrs = HashWithIndifferentAccess.new(attrs) if attrs.kind_of? Hash
           
@@ -97,7 +78,7 @@ module HasModerated
           end
         
           # parse new associations
-          try_disable_moderation(to) do |rec|
+          try_without_moderation(to) do |rec|
             arec = nil
             # PARAM = ID
             if attrs.class == Fixnum
@@ -118,7 +99,7 @@ module HasModerated
               raise "don't know how to parse #{attrs.class}"
             end
             if arec
-              try_disable_moderation(arec) do
+              try_without_moderation(arec) do
                 arec.save(:validate => false) # don't run validations
                 # TODO: validations? sup?
               end
@@ -130,14 +111,39 @@ module HasModerated
             end
           end
         end
+        
+        def self.apply_delete_association(to, reflection, attrs)
+          m = reflection.class_name.constantize
+
+          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection)
+
+          return if attrs.blank?
+          return if attrs.class != Fixnum
+          
+          try_without_moderation(to) do
+            delete_assoc_from_record(to, attrs, reflection)
+          end
+        end
       
         # add/delete associations to a record
-        def self.apply(record, associations)
-          associations.each_pair do |assoc_name, assoc_records|
+        def self.apply(moderation, data)
+          record = moderation.moderatable
+          associations = data[:associations]
+          delete_associations = data[:delete_associations]
+          
+          associations && associations.each_pair do |assoc_name, assoc_records|
             reflection = record.class.reflections[assoc_name.to_sym]
           
             assoc_records.each do |attrs|
               apply_add_association(record, reflection, attrs) if attrs.present?
+            end
+          end
+          
+          delete_associations && delete_associations.each_pair do |assoc_name, assoc_records|
+            reflection = record.class.reflections[assoc_name.to_sym]
+            
+            assoc_records.each do |attrs|
+              apply_delete_association(record, reflection, attrs) if attrs.present?
             end
           end
         end

@@ -2,12 +2,10 @@ module HasModerated
   module ModeratedCreate
     module ClassMethods
       def has_moderated_create *options
+        HasModerated::Common::init(self)
         # Lazily include the instance methods so we don't clutter up
         # any more ActiveRecord models than we have to.
         send :include, InstanceMethods
-
-        # use an attribute to temporarily disable moderation before_save filter
-        attr_accessor :has_moderated_updating
 
         # save options for use later
         cattr_accessor :moderated_create_options
@@ -17,9 +15,26 @@ module HasModerated
       end
     end
     
+    module ApplyModeration
+      def self.apply(moderation, value)
+        if value[:create].present?
+          # create the main record
+          rec = moderation.moderatable_type.constantize.new
+          attrs = value[:create][:attributes]
+          # bypass attr_accessible protection
+          attrs && attrs.each_pair do |key, val|
+            rec.send(key.to_s+"=", val) unless key.to_s == 'id'
+          end
+          rec.without_moderation { rec.save(:validate => false) }
+          moderation.moderatable = rec
+          HasModerated::Associations::Base::ApplyModeration::apply(moderation, value[:create])
+        end
+      end
+    end
+    
     module InstanceMethods
       def create_or_update_with_moderation *args
-        if valid? && new_record? && @has_moderated_updating != true
+        if valid? && new_record? && @moderation_disabled != true
           to_moderation_created
           true
         else
@@ -29,18 +44,11 @@ module HasModerated
 
       def to_moderation_created
         options = self.class.moderated_create_options
-        assoc_attrs = HasModerated::Common::get_assocs_for_moderation(options[:with_associations], self)
+        assoc_attrs = HasModerated::Adapters::ActiveRecord::get_assocs_for_moderation(options[:with_associations], self)
 
-        attr_value = {
-          :main_model => get_moderation_attributes(self),
+        create_moderation_with_hooks!(:create => {
+          :attributes => get_moderation_attributes,
           :associations => assoc_attrs
-        }
-
-        create_moderation_with_hooks!({
-          :moderatable_type => self.class.to_s,
-          :moderatable_id => self.id,
-          :attr_name => "-",
-          :attr_value => attr_value.to_yaml
         })
       end
     end

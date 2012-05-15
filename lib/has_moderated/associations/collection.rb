@@ -7,7 +7,7 @@ module HasModerated
           if owner.new_record? || owner.moderation_disabled
             add_to_target_without_moderation record
           else
-            HasModerated::Associations::Base::CreateModeration::add_associations_moderation(owner, self.reflection.name => [record])
+            owner.add_associations_moderated(self.reflection.name => [record])
             record
           end
         end
@@ -17,7 +17,7 @@ module HasModerated
           if owner.new_record? || owner.moderation_disabled
             delete_records_without_moderation(records, method)
           else
-            #todo only care for records which are already in database
+            # TODO only care for records which are already in database
             record_ids = records.map(&:id)
             owner.delete_associations_moderated(self.reflection.name => record_ids)
           end

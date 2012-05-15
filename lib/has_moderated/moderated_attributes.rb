@@ -2,11 +2,10 @@ module HasModerated
   module ModeratedAttributes
     module ClassMethods
       def has_moderated *args, &block
+        HasModerated::Common::init(self)
         # Lazily include the instance methods so we don't clutter up
         # any more ActiveRecord models than we have to.
         send :include, InstanceMethods
-
-        has_many :moderations, :as => :moderatable, :dependent => :destroy
 
         cattr_accessor :moderated_attributes
         cattr_accessor :moderated_options
@@ -23,11 +22,11 @@ module HasModerated
         end
 
         # use an attribute to temporarily disable moderation before_save filter
-        attr_accessor :has_moderated_updating
+        attr_accessor :moderation_disabled
 
         # send moderated attributes to moderation before saving the model
         before_save do
-          if self.valid? && @has_moderated_updating != true &&
+          if self.valid? && @moderation_disabled != true &&
             # don't save moderated attributes if create is moderated and it's a new record
             !(self.class.respond_to?("moderated_create_options") && new_record?)
             moderations = self.to_moderation
@@ -39,6 +38,7 @@ module HasModerated
         end
 
         # when creating a new record, we must update moderations' id after it is known (after create)
+        # TODO is this even necessary when using assoc.create ?
         after_create do
           if !self.id.blank? && !@pending_moderations.blank?
             @pending_moderations.each do |m|
@@ -50,19 +50,32 @@ module HasModerated
       end
     end
     
-    module InstanceMethods
+    module ApplyModeration
+      def self.apply(moderation, value)
+        if value[:attributes].present?
+          rec = moderation.moderatable
+          rec.without_moderation do
+            value[:attributes].each_pair do |attr_name, attr_value|
+              # bypass attr_accessible protection
+              rec.send(attr_name.to_s+"=", attr_value)
+            end
+            rec.save(:validate => false) # don't run validations
+          end
+        end
+      end
+    end
     
+    module InstanceMethods
       def to_moderation
         moderations = []
         self.changes.each_pair do |att_name, values|
           att_name = att_name.to_s
           if self.class.moderated_attributes.include?(att_name) && !(values[0].blank? && values[1].blank?)
-            moderations.push(create_moderation_with_hooks!({
-              :moderatable_type => self.class.to_s,
-              :moderatable_id => self.id,
-              :attr_name => att_name,
-              :attr_value => self.attributes[att_name].to_yaml
-            }))
+            moderations.push(create_moderation_with_hooks!(
+              :attributes => {
+                att_name => self.attributes[att_name]
+              }
+            ))
             self.send(att_name+"=", values[0])
           end
         end

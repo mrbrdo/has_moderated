@@ -99,6 +99,66 @@ describe Task do
       subtask = Task.first.renamed_subtasks.first
       subtask.title.should eq("Subtask 1")
     end
+    
+    it "moderates deleting association" do
+      task = Task.create! :title => "Task 1"
+      task.renamed_subtasks.create! :title => "Subtask 1"
+      Moderation.last.accept
+      
+      Task.last.renamed_subtasks.delete(Task.last.renamed_subtasks.last)
+      Task.last.renamed_subtasks.count.should eq(1)
+      
+      Moderation.last.accept
+      Task.last.renamed_subtasks.count.should eq(0)
+    end
+  end
+  
+  context "create moderation with association:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      # TODO: set very obscure options
+      Task.has_many :renamed_subtasks, :class_name => "Subtask"
+      Task.has_moderated_create :with_associations => [:renamed_subtasks]
+    end
+    
+    it "moderates create" do
+      task = Task.create! :title => "Task 1"
+      Moderation.count.should eq(1)
+      Task.count.should eq(0)
+      
+      Moderation.last.accept
+      Task.count.should eq(1)
+      Task.first.title.should eq("Task 1")
+    end
+    
+    it "moderates assoc on create" do
+      task = Task.new :title => "Task 1"
+      task.renamed_subtasks.build :title => "Subtask 1"
+      task.save
+      Subtask.count.should eq(0)
+      Moderation.last.accept
+      
+      Task.last.renamed_subtasks.count.should eq(1)
+      Task.last.renamed_subtasks.first.title.should eq("Subtask 1")
+    end
+  end
+  
+  context "destroy moderation:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Task.has_moderated_destroy
+    end
+    
+    it "moderates destroy" do
+      Task.create! :title => "Task 1"
+      Task.count.should eq(1)
+      Task.first.destroy
+      Task.count.should eq(1)
+      Moderation.last.accept
+      Task.count.should eq(0)
+    end
   end
   
   #
@@ -148,7 +208,7 @@ describe Task do
       subtask.title.should eq("Subtask 1")
     end
     
-    it "set subtask to nil", :broken => true do
+    it "set subtask to nil" do
       task = Task.create! :title => "Task 1"
       task.renamed_subtask = Subtask.new :title => "Subtask 1"
       task.save
@@ -165,5 +225,60 @@ describe Task do
     end
   end
   
-  it "get_moderation_attributes can be overriden in model"
+  context "moderates attributes:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Task.has_moderated :title
+    end
+    
+    it "moderates an attribute" do
+      Task.create! :title => "Task 1"
+      Task.first.title.should be_blank
+      Moderation.last.accept
+      Task.first.title.should eq("Task 1")
+      Task.first.update_attribute(:title, "Task 2")
+      Task.first.title.should eq("Task 1")
+      Moderation.last.accept
+      Task.first.title.should eq("Task 2")
+    end
+  end
+  
+  context "common features:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Task.has_moderated_create
+      Task.class_eval do
+        def get_moderation_attributes
+          { :test => "ok" }
+        end
+      end
+    end
+    it "get_moderation_attributes can be overriden in model" do
+      Task.create! :title => "Task 1"
+      data = YAML::load(Moderation.last.data)[:create][:attributes]
+      data.should_not be_blank
+      data[:test].should_not be_blank
+      data[:test].should eq("ok")
+      data.keys.count.should eq(1)
+    end
+  end
+  
+  context "hooks:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Task.has_moderated :title
+      Task.moderation_creating do |moderation|
+        moderation.data = "Test!"
+      end
+    end
+    
+    it "handles a creating hook properly" do
+      Task.create! :title => "Task 1"
+      Moderation.count.should eq(1)
+      Moderation.last.data.should eq("Test!")
+    end
+  end
 end

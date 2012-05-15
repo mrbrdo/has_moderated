@@ -2,13 +2,13 @@ module HasModerated
   module Associations
     module HasMany
       def self.add_assoc_to_record(to, record, reflection)
-        fk = HasModerated::Common::foreign_key(reflection).try(:to_s)
+        fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection).try(:to_s)
         field = if !reflection.options[:as].blank?
           # todo: extract
           reflection.options[:as].to_s
         elsif !fk.blank?
           results = record.class.reflections.reject do |assoc_name, assoc|
-            !(HasModerated::Common::foreign_key(assoc).try(:to_s) == fk)
+            !(HasModerated::Adapters::ActiveRecord::foreign_key(assoc).try(:to_s) == fk)
           end
           if results.blank?
             raise "Please set foreign_key for both belongs_to and has_one/has_many!"
@@ -17,8 +17,19 @@ module HasModerated
         else
           to.class.to_s.underscore
         end
-        HasModerated::Common::try_disable_moderation(record) do
+        HasModerated::Common::try_without_moderation(record) do
           record.send(field + "=", to)
+        end
+      end
+      
+      def self.delete_assoc_from_record(from, assoc_id, reflection)
+        return unless from && assoc_id
+        klass = reflection.class_name.constantize
+        
+        if reflection.macro == :has_and_belongs_to_many || !reflection.options[:through].blank? || reflection.macro == :has_many
+          from.send(reflection.name).delete(klass.find_by_id(assoc_id))
+        else
+          raise "Cannot delete association for this type of associations!"
         end
       end
       

@@ -1,4 +1,4 @@
-class CreateModerations < ActiveRecord::Migration
+class CreateModerations2 < ActiveRecord::Migration
   def self.up
     if table_exists? :moderations # for upgrading
       if Moderation.count > 0
