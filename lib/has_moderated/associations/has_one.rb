@@ -15,16 +15,6 @@ module HasModerated
             record
           end
         end
-      end # module
-      
-      def self.add_assoc_to_record(*args)
-        # same as HasMany
-        HasModerated::Associations::HasMany::add_assoc_to_record(*args)
-      end
-      
-      def self.delete_assoc_from_record(from, assoc_id, reflection)
-        from.send("#{reflection.name}=", nil)
-        from.save # TODO necessary?
       end
       
       module ClassMethods
@@ -34,6 +24,12 @@ module HasModerated
               assoc = self.association(reflection.name)
               # check association type
               if !reflection.collection?
+                # avoid multiple patch problem and still work for tests
+                if assoc.respond_to?(:replace_without_moderation)
+                  assoc.class_eval do
+                    alias_method :replace, :replace_without_moderation
+                  end
+                end
                 # patch methods to moderate changes
                 assoc.class_eval do
                   include AssociationPatches
@@ -44,6 +40,18 @@ module HasModerated
               end
             end
           end
+      end
+      
+      module AssociationHelpers
+        def self.add_assoc_to_record(*args)
+          # same as HasMany
+          HasModerated::Associations::Collection::AssociationHelpers::add_assoc_to_record(*args)
+        end
+      
+        def self.delete_assoc_from_record(from, assoc_id, reflection)
+          from.send("#{reflection.name}=", nil)
+          from.save # TODO necessary?
+        end
       end
     end
   end

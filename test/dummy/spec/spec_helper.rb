@@ -27,4 +27,5 @@ RSpec.configure do |config|
   
   # Exclude broken tests
   config.filter_run_excluding :broken => true
+  #config.filter_run :focus => true
 end

@@ -51,7 +51,7 @@ module HasModerated
           return unless to && assoc_id
 
           if reflection.macro == :has_many
-            HasModerated::Associations::HasMany::add_assoc_to_record(to, assoc_id, reflection)
+            HasModerated::Associations::Collection::add_assoc_to_record(to, assoc_id, reflection)
             # ok
           end
         end
@@ -60,9 +60,9 @@ module HasModerated
           return unless from && assoc_id
 
           if reflection.macro == :has_one
-            HasModerated::Associations::HasOne::delete_assoc_from_record(from, assoc_id, reflection)
+            HasModerated::Associations::HasOne::AssociationHelpers::delete_assoc_from_record(from, assoc_id, reflection)
           else
-            HasModerated::Associations::HasMany::delete_assoc_from_record(from, assoc_id, reflection)
+            HasModerated::Associations::Collection::delete_assoc_from_record(from, assoc_id, reflection)
           end
         end
       
@@ -94,7 +94,7 @@ module HasModerated
                 arec.send(key.to_s+"=", val)
               end
               # recursive, used for has_many :through
-              apply_moderation(arec, attrs[:associations]) if attrs[:associations].present?
+              apply(arec, attrs) if attrs[:associations].present?
             else
               raise "don't know how to parse #{attrs.class}"
             end
@@ -127,7 +127,11 @@ module HasModerated
       
         # add/delete associations to a record
         def self.apply(moderation, data)
-          record = moderation.moderatable
+          record = if moderation.kind_of? Moderation
+            moderation.moderatable
+          else
+            moderation
+          end
           associations = data[:associations]
           delete_associations = data[:delete_associations]
           

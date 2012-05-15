@@ -10,72 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120515155730) do
-
-  create_table "habtm_name_tests", :force => true do |t|
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "habtm_name_tests_tasks", :id => false, :force => true do |t|
-    t.integer "task_id"
-    t.integer "habtm_name_test_id"
-  end
-
-  create_table "hjoin_tests", :force => true do |t|
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "hjoin_tests_tasks", :id => false, :force => true do |t|
-    t.integer "task_id"
-    t.integer "hjoin_test_id"
-  end
-
-  create_table "hmany_fk_tests", :force => true do |t|
-    t.integer  "something_id"
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "hmanythrough_joins", :force => true do |t|
-    t.integer  "hmanythrough_test_id"
-    t.integer  "task_id"
-    t.string   "exdata"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "hmanythrough_tests", :force => true do |t|
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "hone_as_tests", :force => true do |t|
-    t.integer  "testable_id"
-    t.string   "testable_type"
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "hone_tests", :force => true do |t|
-    t.integer  "task_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string   "title"
-  end
-
-  create_table "hook_tests", :force => true do |t|
-    t.string   "title"
-    t.string   "foo"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
+ActiveRecord::Schema.define(:version => 20120515175621) do
 
   create_table "moderations", :force => true do |t|
     t.integer  "moderatable_id"
@@ -85,40 +20,22 @@ ActiveRecord::Schema.define(:version => 20120515155730) do
     t.datetime "updated_at",       :null => false
   end
 
-  create_table "photo_holders", :force => true do |t|
-    t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "photo_relateds", :force => true do |t|
-    t.integer  "photo_id"
-    t.string   "data"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  create_table "photos", :force => true do |t|
-    t.string   "photo"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "photo_holder_id"
-  end
-
   create_table "subtasks", :force => true do |t|
     t.integer  "task_id"
     t.string   "title"
     t.string   "desc"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "task_all_id"
+    t.integer  "parentable_id"
+    t.string   "parentable_type"
   end
 
-  create_table "task_alls", :force => true do |t|
+  create_table "task_connections", :force => true do |t|
     t.string   "title"
-    t.string   "value"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer  "m1_id"
+    t.integer  "m2_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "task_photos", :force => true do |t|
@@ -133,6 +50,11 @@ ActiveRecord::Schema.define(:version => 20120515155730) do
     t.string   "desc"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "tasks_jointable", :id => false, :force => true do |t|
+    t.integer "m1_id"
+    t.integer "m2_id"
   end
 
 end

@@ -51,7 +51,7 @@ module HasModerated
         end
         
         if through_assocs[assoc_name.to_sym] # TODO !
-          assoc[:associations] = get_assocs_for_moderation(through_assocs[assoc_name.to_sym], m)
+          assoc[:associations] = get_assocs_for_moderation(:all, m)
         end
         assoc
       end
@@ -96,7 +96,7 @@ module HasModerated
               one_assoc.push(m.id)
             end
             if through_assocs[assoc.to_sym]
-              one_assoc.last[:associations] = get_assocs_for_moderation(through_assocs[assoc.to_sym], m)
+              one_assoc.last[:associations] = get_assocs_for_moderation(:all, m)
             end
           end
           assoc_attrs[assoc] = one_assoc unless one_assoc.empty?

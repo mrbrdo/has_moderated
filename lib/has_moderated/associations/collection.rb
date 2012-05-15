@@ -4,7 +4,7 @@ module HasModerated
       module AssociationPatches
         # moderate adding associations
         def add_to_target_with_moderation record
-          if owner.new_record? || owner.moderation_disabled
+          if owner.moderation_disabled
             add_to_target_without_moderation record
           else
             owner.add_associations_moderated(self.reflection.name => [record])
@@ -31,6 +31,12 @@ module HasModerated
               assoc = self.association(reflection.name)
               # check association type
               if reflection.collection?
+                # avoid multiple patch problem and still work for tests
+                if assoc.respond_to?(:add_to_target_without_moderation)
+                  assoc.class_eval do
+                    alias_method :add_to_target, :add_to_target_without_moderation
+                  end
+                end
                 # patch methods to moderate changes
                 assoc.class.send(:include, AssociationPatches)
                 assoc.class_eval do
@@ -43,6 +49,73 @@ module HasModerated
             end
           end
       end
+      
+        def self.add_assoc_to_record_habtm_hmt(target, assoc_record, reflection)
+          field = if reflection.options[:join_table].present?
+            join_table = reflection.options[:join_table].to_s
+            results = assoc_record.class.reflections.reject do |assoc_name, assoc|
+              !(assoc.options[:join_table] && assoc.options[:join_table].to_s == join_table)
+            end
+            if results.count != 1
+              raise "has_moderated: Cannot determine join table for a Habtm association!"
+            end
+            results.first[1].name.to_s
+          elsif reflection.options[:through].present?
+            through_model = reflection.options[:through].to_s
+            results = assoc_record.class.reflections.reject do |assoc_name, assoc|
+              !(assoc.options[:through] && assoc.options[:through].to_s == through_model)
+            end
+            if results.count != 1
+              raise "has_moderated: Cannot determine correct association for a has_many :through association!"
+            end
+            results.first[1].name.to_s
+          else
+            raise "has_moderated: Cannot determine association details!"
+          end
+          assoc_record.send(field) << target
+        end
+
+        def self.add_assoc_to_record_hm(to, record, reflection)
+          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection).try(:to_s)
+          field = if !reflection.options[:as].blank?
+            # todo: extract
+            reflection.options[:as].to_s
+          elsif !fk.blank?
+            all_keys = []
+            results = record.class.reflections.reject do |assoc_name, assoc|
+              all_keys.push(HasModerated::Adapters::ActiveRecord::foreign_key(assoc).try(:to_s))
+              !(HasModerated::Adapters::ActiveRecord::foreign_key(assoc).try(:to_s) == fk)
+            end
+            if results.blank?
+              raise "Please set foreign_key for both belongs_to and has_one/has_many! fk: #{fk}, keys: #{all_keys.to_yaml}"
+            end
+            results.first[1].name.to_s
+          else
+            to.class.to_s.underscore # TODO hardcoded, fix
+          end
+          HasModerated::Common::try_without_moderation(record) do
+            record.send(field + "=", to)
+          end
+        end
+
+        def self.add_assoc_to_record(to, record, reflection)
+          if reflection.macro == :has_and_belongs_to_many || !reflection.options[:through].blank?
+            add_assoc_to_record_habtm_hmt(to, record, reflection)
+          else
+            add_assoc_to_record_hm(to, record, reflection)
+          end
+        end
+
+        def self.delete_assoc_from_record(from, assoc_id, reflection)
+          return unless from && assoc_id
+          klass = reflection.class_name.constantize
+
+          if reflection.macro == :has_and_belongs_to_many || !reflection.options[:through].blank? || reflection.macro == :has_many
+            from.send(reflection.name).delete(klass.find_by_id(assoc_id))
+          else
+            raise "Cannot delete association for this type of associations!"
+          end
+        end
     end
   end
 end
