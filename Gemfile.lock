@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    has_moderated (0.0.50)
+    has_moderated (1.0.alpha)
       rails (>= 3.0.0)
 
 GEM
@@ -53,7 +53,7 @@ GEM
       i18n (>= 0.4.0)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
-    mime-types (1.17.2)
+    mime-types (1.18)
     multi_json (1.0.4)
     polyglot (0.3.3)
     rack (1.4.1)
@@ -113,7 +113,7 @@ GEM
     treetop (1.4.10)
       polyglot
       polyglot (>= 0.3.1)
-    tzinfo (0.3.32)
+    tzinfo (0.3.33)
 
 PLATFORMS
   ruby

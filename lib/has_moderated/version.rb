@@ -1,3 +1,3 @@
 module HasModerated
-  VERSION = "0.0.50"
+  VERSION = "1.0.alpha"
 end
