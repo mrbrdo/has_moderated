@@ -14,7 +14,7 @@ def uploadEmpty?
 end
 
 TEMPDIR = File.expand_path("../../../public/uploads/tmp", __FILE__)
-UPLOADDIR = "/Users/apple/rails/has_moderated/test/dummy/public/uploads/photo/avatar/1"
+UPLOADDIR = File.expand_path("../../../public/uploads/photo/avatar/1", __FILE__)
 
 def carrierwave_test_photo
   test_photo_path = File.expand_path("../../../public/test.jpg", __FILE__)
