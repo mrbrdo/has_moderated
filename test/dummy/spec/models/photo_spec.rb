@@ -1,5 +1,5 @@
-require 'spec_helper'
-require 'support/photos'
+require File.expand_path('../../spec_helper', __FILE__)
+require File.expand_path('../../support/photos', __FILE__)
 
 describe Photo do
   before(:each) do
