@@ -7,7 +7,6 @@ require 'has_moderated/adapters/active_record'
 require 'has_moderated/associations/base'
 require 'has_moderated/associations/has_one'
 require 'has_moderated/associations/collection'
-require 'has_moderated/associations/has_many'
 
 
 require 'has_moderated/moderated_attributes'

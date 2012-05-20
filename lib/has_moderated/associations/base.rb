@@ -30,14 +30,14 @@ module HasModerated
           assoc_names.map{ |name| self.reflections[name] }.each do |assoc|
             case assoc.macro
               when :has_many then
-                self.send :extend, HasModerated::Associations::HasMany::ClassMethods
-                has_moderated_has_many_association(assoc)
+                self.send :extend, HasModerated::Associations::Collection::ClassMethods
+                has_moderated_collection_association(assoc)
               when :has_one then
                 self.send :extend, HasModerated::Associations::HasOne::ClassMethods
                 has_moderated_has_one_association(assoc)
               when :has_and_belongs_to_many then
-                  self.send :extend, HasModerated::Associations::HasMany::ClassMethods
-                  has_moderated_has_many_association(assoc)
+                self.send :extend, HasModerated::Associations::Collection::ClassMethods
+                has_moderated_collection_association(assoc)
               else raise "don't know how to moderate association macro #{assoc.macro}"
             end
           end
