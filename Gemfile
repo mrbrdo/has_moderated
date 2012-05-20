@@ -19,3 +19,7 @@ gem 'rails3-generators'
 gem 'carrierwave'
 gem 'ruby-debug'
 gem 'rmagick'
+
+gem 'spork'
+gem 'guard-spork'
+gem 'guard-rspec'

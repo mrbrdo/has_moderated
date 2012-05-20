@@ -25,7 +25,6 @@ module HasModerated
 
     # calls user hooks for creation of a new moderation
     def self.call_creating_hook model, moderation
-      #todo use model.class.moderation_hooks[:creating_moderation]
       if model.class.respond_to?(:moderation_hooks)
         model.class.moderation_hooks[:creating] ||= []
         model.class.moderation_hooks[:creating].each do |hook|

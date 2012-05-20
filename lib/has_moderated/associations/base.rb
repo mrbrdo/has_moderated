@@ -2,8 +2,8 @@ module HasModerated
   module Associations
     module Base
       
-      # Class methods included into ActiveRecord::Base so that you can call them in
-      # your ActiveRecord models.
+      # Class methods included into ActiveRecord::Base so that they can be called in
+      # ActiveRecord models.
       module ClassMethods
         
         # Will moderate the passed in associations if they are supported.
@@ -35,6 +35,9 @@ module HasModerated
               when :has_one then
                 self.send :extend, HasModerated::Associations::HasOne::ClassMethods
                 has_moderated_has_one_association(assoc)
+              when :has_and_belongs_to_many then
+                  self.send :extend, HasModerated::Associations::HasMany::ClassMethods
+                  has_moderated_has_many_association(assoc)
               else raise "don't know how to moderate association macro #{assoc.macro}"
             end
           end
@@ -50,8 +53,8 @@ module HasModerated
         def self.add_assoc_to_record(to, assoc_id, reflection)
           return unless to && assoc_id
           
-          # TODO has_one weirness?
-          if reflection.macro == :has_many
+          # TODO has_one weirdness?
+          if reflection.macro == :has_many || reflection.macro == :has_and_belongs_to_many
             HasModerated::Associations::Collection::AssociationHelpers::add_assoc_to_record(to, assoc_id, reflection)
           end
         end

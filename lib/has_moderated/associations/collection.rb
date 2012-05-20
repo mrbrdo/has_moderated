@@ -58,7 +58,7 @@ module HasModerated
               !(assoc.options[:join_table] && assoc.options[:join_table].to_s == join_table)
             end
             if results.count != 1
-              raise "has_moderated: Cannot determine join table for a Habtm association!"
+              raise "has_moderated: Cannot determine join table for a Habtm association! Are you missing has_and_belongs_to_many in one of your models?"
             end
             results.first[1].name.to_s
           elsif reflection.options[:through].present?

@@ -9,9 +9,9 @@ describe Task do
   
   context "has_many association:" do
     before do
-      Object.send(:remove_const, 'Task')
+      Object.send(:remove_const, 'Task') if defined? Task
       load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
+      Object.send(:remove_const, 'Subtask') if defined? Subtask
       load 'subtask.rb'
       # TODO: set very obscure options
       Task.has_many :renamed_subtasks, :class_name => "Subtask"
@@ -128,18 +128,34 @@ describe Task do
       load 'subtask.rb'
       # TODO: set very obscure options
       Task.has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
+      Subtask.has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
       Task.has_moderated_association :renamed_subtasks
     end
     
-    it "creates and associates subtask (create)", :broken => true do
+    it "creates and associates a new subtask" do
       task = Task.create! :title => "Task 1"
       Moderation.count.should eq(0)
       task.renamed_subtasks.create! :title => "Subtask 1"
-    
-      task = Task.first
+      
       Subtask.count.should eq(0)
+      task = Task.first
       task.renamed_subtasks.count.should eq(0)
     
+      Moderation.count.should eq(1)
+      Moderation.last.accept
+      Moderation.count.should eq(0)
+      
+      subtask = Task.first.renamed_subtasks.first
+      subtask.title.should eq("Subtask 1")
+    end
+    
+    it "associates an existing subtask" do
+      task = Task.create! :title => "Task 1"
+      Subtask.create! :title => "Subtask 1"
+      Task.first.renamed_subtasks.count.should eq(0)
+      Moderation.count.should eq(0)
+      task.renamed_subtasks << Subtask.first
+      
       Moderation.count.should eq(1)
       Moderation.last.accept
       Moderation.count.should eq(0)
@@ -330,6 +346,7 @@ describe Task do
       Task.first.title.should eq("Task 1")
     end
     
+    # TODO: test all associations on create
     it "moderates assoc on create" do
       task = Task.new :title => "Task 1"
       task.renamed_subtasks.build :title => "Subtask 1"

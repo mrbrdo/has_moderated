@@ -43,6 +43,15 @@ GEM
     erubis (2.7.0)
     factory_girl (2.5.1)
       activesupport
+    ffi (1.0.11)
+    guard (1.0.3)
+      ffi (>= 0.5.0)
+      thor (>= 0.14.6)
+    guard-rspec (0.6.0)
+      guard (>= 0.10.0)
+    guard-spork (0.8.0)
+      guard (>= 0.10.0)
+      spork (>= 0.8.4)
     hike (1.2.1)
     i18n (0.6.0)
     journey (1.0.1)
@@ -103,6 +112,7 @@ GEM
       ruby-debug-base (~> 0.10.4.0)
     ruby-debug-base (0.10.4)
       linecache (>= 0.3)
+    spork (0.9.2)
     sprockets (2.1.2)
       hike (~> 1.2)
       rack (~> 1.0)
@@ -121,10 +131,13 @@ PLATFORMS
 DEPENDENCIES
   carrierwave
   factory_girl
+  guard-rspec
+  guard-spork
   has_moderated!
   rails3-generators
   rmagick
   rspec
   rspec-rails
   ruby-debug
+  spork
   sqlite3
