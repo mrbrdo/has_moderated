@@ -13,7 +13,6 @@ describe Task do
       load 'task.rb'
       Object.send(:remove_const, 'Subtask') if defined? Subtask
       load 'subtask.rb'
-      # TODO: set very obscure options
       Task.has_many :renamed_subtasks, :class_name => "Subtask"
       Task.has_moderated_association :renamed_subtasks
     end
@@ -114,7 +113,76 @@ describe Task do
       Task.last.renamed_subtasks.count.should eq(0)
     end
   end
+  
+  #
+  # has_moderated_association
+  # has_many polymorphic
+  #
+  
+  context "has_many polymorphic association:" do
+    before do
+      Object.send(:remove_const, 'Task') if defined? Task
+      load 'task.rb'
+      Object.send(:remove_const, 'Subtask') if defined? Subtask
+      load 'subtask.rb'
+      Task.has_many :renamed_subtasks, :class_name => "Subtask", :as => :parentable
+      Subtask.belongs_to :parentable, :polymorphic => true
+      Task.has_moderated_association :renamed_subtasks
+    end
+    
+    it "creates and associates subtask (create)" do
+      task = Task.create! :title => "Task 1"
+      Moderation.count.should eq(0)
+      task.renamed_subtasks.create! :title => "Subtask 1"
+    
+      task = Task.first
+      task.renamed_subtasks.count.should eq(0)
+    
+      Moderation.count.should eq(1)
+      Moderation.last.accept
+      Moderation.count.should eq(0)
+      
+      subtask = Task.first.renamed_subtasks.first
+      subtask.title.should eq("Subtask 1")
+      subtask.parentable_type.should eq("Task")
+    end
+  end
 
+  #
+  # has_moderated_association
+  # has_one polymorphic
+  #
+  
+  context "has_one polymorphic association:" do
+    before do
+      Object.send(:remove_const, 'Task') if defined? Task
+      load 'task.rb'
+      Object.send(:remove_const, 'Subtask') if defined? Subtask
+      load 'subtask.rb'
+      Task.has_one :renamed_subtask, :class_name => "Subtask", :as => :parentable
+      Subtask.belongs_to :parentable, :polymorphic => true
+      Task.has_moderated_association :renamed_subtask
+    end
+    
+    it "creates and associates subtask (create)" do
+      task = Task.create! :title => "Task 1"
+      Moderation.count.should eq(0)
+      task.renamed_subtask = Subtask.new :title => "Subtask 1"
+      task.save
+    
+      task = Task.first
+      task.renamed_subtask.should be_nil
+    
+      Moderation.count.should eq(1)
+      Moderation.last.accept
+      Moderation.count.should eq(0)
+      
+      subtask = Task.first.renamed_subtask
+      subtask.title.should eq("Subtask 1")
+      subtask.parentable_type.should eq("Task")
+    end
+  end
+  
   #
   # has_moderated_association
   # has_and_belongs_to_many
@@ -126,7 +194,6 @@ describe Task do
       load 'task.rb'
       Object.send(:remove_const, 'Subtask')
       load 'subtask.rb'
-      # TODO: set very obscure options
       Task.has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
       Subtask.has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
       Task.has_moderated_association :renamed_subtasks
@@ -153,6 +220,7 @@ describe Task do
       task = Task.create! :title => "Task 1"
       Subtask.create! :title => "Subtask 1"
       Task.first.renamed_subtasks.count.should eq(0)
+      Subtask.count.should eq(1)
       Moderation.count.should eq(0)
       task.renamed_subtasks << Subtask.first
       
@@ -176,7 +244,6 @@ describe Task do
       load 'task.rb'
       Object.send(:remove_const, 'Subtask')
       load 'subtask.rb'
-      # TODO: set very obscure options
       Task.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m1_id"
       Task.has_many :renamed_subtasks, :class_name => "Subtask", :through => :renamed_connections, :source => :renamed_subtask
       Subtask.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m2_id"
@@ -202,6 +269,10 @@ describe Task do
       
       subtask = Task.first.renamed_subtasks.first
       subtask.title.should eq("Subtask 1")
+      conn = Subtask.first.renamed_connections.first
+      conn.title.should eq("Connection 1")
+      conn.renamed_subtask.title.should eq("Subtask 1")
+      conn.renamed_task.title.should eq("Task 1")
     end
     
     it "associates subtask 2 (update)" do
@@ -331,7 +402,6 @@ describe Task do
       load 'task.rb'
       Object.send(:remove_const, 'Subtask')
       load 'subtask.rb'
-      # TODO: set very obscure options
       Task.has_many :renamed_subtasks, :class_name => "Subtask"
       Task.has_moderated_create :with_associations => [:renamed_subtasks]
     end

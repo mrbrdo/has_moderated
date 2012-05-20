@@ -79,7 +79,6 @@ module HasModerated
         def self.add_assoc_to_record_hm(to, record, reflection)
           fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection).try(:to_s)
           field = if !reflection.options[:as].blank?
-            # todo: extract
             reflection.options[:as].to_s
           elsif !fk.blank?
             all_keys = []
