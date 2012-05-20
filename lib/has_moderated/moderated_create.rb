@@ -26,7 +26,7 @@ module HasModerated
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
           rec.without_moderation { rec.save(:validate => false) }
-          moderation.moderatable = rec
+          moderation.moderatable = rec # just so associations can be applied in next line
           HasModerated::Associations::Base::ApplyModeration::apply(moderation, value[:create])
         end
       end

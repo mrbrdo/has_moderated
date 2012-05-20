@@ -9,8 +9,12 @@ def tmpEmpty?
   dirEmpty?(TEMPDIR)
 end
 
+def uploadEmpty?
+  dirEmpty?(UPLOADDIR)
+end
+
 TEMPDIR = File.expand_path("../../../public/uploads/tmp", __FILE__)
-UPLOADDIR = "/Users/apple/rails/has_moderated/test/dummy/public/uploads/photo/photo/1"
+UPLOADDIR = "/Users/apple/rails/has_moderated/test/dummy/public/uploads/photo/avatar/1"
 
 def carrierwave_test_photo
   test_photo_path = File.expand_path("../../../public/test.jpg", __FILE__)
@@ -24,5 +28,5 @@ def assert_photo_uploaded photo
   
   filename = photo.file.file
   File.exist?(filename)
-  assert(filename =~ /photo\/1\/test.jpg\Z/)
+  assert(filename =~ /avatar\/1\/test.jpg\Z/)
 end

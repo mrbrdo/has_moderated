@@ -13,6 +13,8 @@ require 'has_moderated/moderated_attributes'
 require 'has_moderated/moderated_create'
 require 'has_moderated/moderated_destroy'
 
+require 'has_moderated/carrier_wave'
+
 module HasModerated
   def self.included(base)
     HasModerated::Common::included(base)

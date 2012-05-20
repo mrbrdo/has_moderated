@@ -88,9 +88,13 @@ You can also see moderations for a specific record. For example, if you have Pos
   post = Post.first
   post.moderations
   
-Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data is serialized in YAML format and can be deserialized by calling
+Moderation is a normal ActiveRecord model, you can inspect it in rails console to see what it holds. Data is serialized in YAML format
 
-  YAML::load(moderation.data)
+  moderation.data
+
+The data can be deserialized using YAML::load, but this has already been done for you
+
+  moderation.parsed_data
 
 To accept a moderation, call
 
@@ -139,24 +143,48 @@ This is just one example how you can do it. You need the attr_accessor here beca
 
 == CarrierWave support
 
-There is support for CarrierWave uploads to be moderated. You must put this line into the model that has a CarrierWave uploader mounted:
+There is support for CarrierWave uploads to be moderated. If you need some more customization look at this module in lib/has_moderated/carrier_wave.rb and make your own version.
 
+=== Example of moderating uploads
+
+This will moderate the upload no matter if the record is being created, or updated. Other unmoderated fields will be saved normally.
+
+  mount_uploader :avatar, GenericUploader
   include HasModerated::CarrierWave
+  has_moderated_carrierwave_field :avatar
+  has_moderated :avatar
 
-Right now *you must use the field name "photo" for the upload filename* because it is currently hardcoded into this module. If you do this, then moderation for the photo should work correctly.
+=== Example of moderating create of the whole model using a CarrierWave uploader
 
-It does not matter if this model has any moderation itself or if you just have an association to it from some other model that is moderated. You must include this module in either case, because it ensures proper serialization of the photo information.
-If you want to moderate changes to the photo on this model itself (e.g. not only when its associated to something else), add also
+This will moderate creating the whole record (all its fields), including the upload.
 
-  has_moderated :carrierwave_photo
+  mount_uploader :avatar, GenericUploader
+  has_moderated_create
+  include HasModerated::CarrierWave
+  has_moderated_carrierwave_field :avatar
+  
+To moderate later changes to the upload (avatar), additionally add
 
-If you need some more customization look at this module in lib/has_moderated/carrier_wave.rb and just copy the methods into your model and customize them (with some care when you do this, some methods should be class methods).
+  has_moderated :avatar
+  
+=== Example of moderating on association
+
+If you are moderating some other model, and the model with the upload is an association to it, you still need to add this
+
+  mount_uploader :avatar, GenericUploader
+  include HasModerated::CarrierWave
+  has_moderated_carrierwave_field :avatar
+
+This will only moderate the upload when it's being saved through an association which has
+
+  has_moderated_association :photos
 
 == Tests
 
 I've tested this project using RSpec. You can find the tests in
 
   test/dummy/spec/models/task_spec.rb
+  test/dummy/spec/models/photo_spec.rb
 
 You can run the tests by running
 
@@ -187,11 +215,6 @@ to make it possible to support other than activerecord, use activemodel when its
 
 use YARD for docs
 check again railscasts episodes for gems (e.g. railties)
--
-
-make hasone, hasmany etc. each a separate "extension" (like carrierwave). for tests just use 2 models (task, subtask) and dont define has_many in model but in test
-
-Amend moderations... Eg if you create a new record and save it, then change something additionally and save again.
 Preview method which gives changed object but doesnt save it.
 
 == License

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120515175621) do
+ActiveRecord::Schema.define(:version => 20120520215224) do
 
   create_table "moderations", :force => true do |t|
     t.integer  "moderatable_id"
@@ -18,6 +18,16 @@ ActiveRecord::Schema.define(:version => 20120515175621) do
     t.text     "data",             :null => false
     t.datetime "created_at",       :null => false
     t.datetime "updated_at",       :null => false
+  end
+
+  create_table "photos", :force => true do |t|
+    t.string   "avatar"
+    t.string   "picture"
+    t.integer  "parentable_id"
+    t.string   "parentable_type"
+    t.string   "title"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
   end
 
   create_table "subtasks", :force => true do |t|

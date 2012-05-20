@@ -4,10 +4,6 @@ module HasModerated
     
     def self.included(base)
       base.send :extend, ClassMethods
-      base.send :include, InstanceMethods
-      
-      base.alias_method_chain :store_photo!, :moderation
-      base.alias_method_chain :write_photo_identifier, :moderation
     end  
     
     def self.photo_tmp_delete(value)
@@ -29,57 +25,84 @@ module HasModerated
     end
 
     module ClassMethods
+      def has_moderated_carrierwave_field field_names
+        base = self
+        base.send :include, InstanceMethods
+        
+        cattr_accessor :moderated_carrierwave_fields
+        
+        field_names = [field_names] unless field_names.kind_of? Array
+        
+        field_names.each do |field_name|
+          field_name = field_name.to_s
+          self.moderated_carrierwave_fields ||= []
+          self.moderated_carrierwave_fields.push(field_name)
+        
+          base.send :define_method, "#{field_name}_tmp_file=" do |value|
+            self.send("#{field_name}=", File.open(value))
+            HasModerated::CarrierWave::photo_tmp_delete(value)
+          end
+        
+          base.send :define_method, "store_#{field_name}_with_moderation!" do
+            is_moderated = self.class.respond_to?(:moderated_attributes) &&
+              self.class.moderated_attributes.include?(field_name)
+            if !is_moderated || self.moderation_disabled || !self.send("#{field_name}_changed?")
+              self.send("store_#{field_name}_without_moderation!")
+            else
+              self.create_moderation_with_hooks!({
+                :attributes => {
+                  "#{field_name}_tmp_file" => self.send(field_name).file.file
+                }
+              })
+            end
+          end
+        
+          base.send :define_method, "write_#{field_name}_identifier_with_moderation" do
+            is_moderated = self.class.respond_to?(:moderated_attributes) &&
+              self.class.moderated_attributes.include?(field_name)
+            if !is_moderated || self.moderation_disabled || !self.send("#{field_name}_changed?")
+              self.send("write_#{field_name}_identifier_without_moderation")
+            end
+          end
+        
+          base.alias_method_chain :get_moderation_attributes, :carrierwave unless base.instance_methods.include?("get_moderation_attributes_without_carrierwave")
+          base.alias_method_chain "store_#{field_name}!", :moderation
+          base.alias_method_chain "write_#{field_name}_identifier", :moderation
+        end
+      end
+      
       # use class method because we only operate on hash parameters, not with a real record
       # here we can delete the photo from tmp
       def moderatable_discard(moderation)
-        value = moderation.interpreted_value
-        if moderation.attr_name == "-" && value && value.respond_to?("[]") &&
-          value[:main_model] && value[:main_model][:photo_tmp_file]
-          value = value[:main_model][:photo_tmp_file]
-        elsif moderation.attr_name != "photo_tmp_file"
-          return # we dont want to process anything else than the above
-        end
-          
-        unless value.blank?
-          HasModerated::CarrierWave::photo_tmp_delete(value)
+        value = moderation.parsed_data
+        
+        moderated_carrierwave_fields.each do |field_name|
+          if value.kind_of? Hash
+            if value.has_key?(:create) && value[:create].has_key?(:attributes)
+              value = value[:create]
+            end
+            if value.has_key?(:attributes) && value[:attributes].has_key?("#{field_name}_tmp_file")
+              value = value[:attributes].send("#{field_name}_tmp_file")
+              if value.present?
+                HasModerated::CarrierWave::photo_tmp_delete(value)
+              end
+            else
+              return # we dont want to process anything else than the above
+            end
+          end
         end
       end
     end
     
     module InstanceMethods
-      attr_accessor :moderation_disabled # in case this model itself is not moderated
-      # maybe autodetect fields that use carrierwave, or specify them
-      def moderatable_hashize
-        attrs = self.attributes
-        attrs = attrs.merge({
-          :photo_tmp_file => self.photo.file.file
-        }) if self.photo && self.photo.file
-      end
-    
-      def photo_tmp_file=(value)
-        self.photo = File.open(value)
-        HasModerated::CarrierWave::photo_tmp_delete(value)
-      end
-      
-      def store_photo_with_moderation!
-        is_moderated = self.class.respond_to?(:moderated_attributes) &&
-          self.class.moderated_attributes.include?("carrierwave_photo")
-        if self.moderation_disabled || !is_moderated || !self.photo_changed?
-          store_photo_without_moderation!
-        else
-          self.moderations.create!({
-            :attr_name => "photo_tmp_file",
-            :attr_value => self.photo.file.file
-          })
+      def get_moderation_attributes_with_carrierwave
+        attrs = get_moderation_attributes_without_carrierwave
+        self.class.moderated_carrierwave_fields.each do |field_name|
+          attrs = attrs.merge({
+            "#{field_name}_tmp_file" => self.send(field_name).file.file
+          }) if self.send(field_name) && self.send(field_name).file
         end
-      end
-
-      def write_photo_identifier_with_moderation
-        is_moderated = self.class.respond_to?(:moderated_attributes) &&
-          self.class.moderated_attributes.include?("carrierwave_photo")
-        if self.moderation_disabled || !is_moderated || !self.photo_changed?
-          write_photo_identifier_without_moderation
-        end
+        attrs
       end
     end
   end

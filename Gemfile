@@ -14,7 +14,6 @@ gemspec
 # gem 'ruby-debug'
 gem 'rspec'
 gem 'rspec-rails'
-gem 'factory_girl'
 gem 'rails3-generators'
 gem 'carrierwave'
 gem 'ruby-debug'
