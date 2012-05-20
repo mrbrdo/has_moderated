@@ -20,5 +20,9 @@ module HasModerated
       end
       self.destroy
     end
+    
+    def preview
+      HasModerated::ModeratedAttributes::ApplyModeration::apply(self, parsed_data, false)
+    end
   end
 end

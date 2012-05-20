@@ -79,6 +79,7 @@ Be especially careful if you are moderating a has_many :through association. In 
   has_moderated_association :bookshelves, :books
 
 == Manage moderations
+
 To see pending moderations, simply call
 
   Moderation.all
@@ -105,6 +106,18 @@ to discard (destroy) it, call
   moderation.discard
   
 Do not use moderation.destroy, because discard triggers certain callbacks which may be necessary.
+
+== Preview moderation
+
+You can see a preview of what a moderation will do. Right now, you can only preview changes to attributes, not associations. To create a preview of how a record will look after applying a moderation, use
+
+  record_preview = moderation.preview
+  
+This will return the record with modified attributes, but not saved to database. You can see what changed by looking at (provided by ActiveRecord)
+
+  record_preview.changes
+  
+Just be careful not to call record_preview.save, as this will create a new moderation record.
 
 == Bypassing moderation
 To bypass moderation (e.g. for admin users), wrap your code into without_moderation like so:

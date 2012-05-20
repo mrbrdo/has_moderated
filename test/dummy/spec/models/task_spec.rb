@@ -522,4 +522,21 @@ describe Task do
       Moderation.last.data.should eq("Test!")
     end
   end
+  
+  context "preview:" do
+    before do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Task.has_moderated :title
+    end
+    
+    it "shows a preview of changed attributes" do
+      Task.create! :title => "Task 1"
+      Task.last.title.should be_blank
+      
+      preview = Moderation.last.preview
+      preview.title.should eq("Task 1")
+      preview.id.should eq(Task.last.id)
+    end
+  end
 end

@@ -51,7 +51,7 @@ module HasModerated
     end
     
     module ApplyModeration
-      def self.apply(moderation, value)
+      def self.apply(moderation, value, do_save = true)
         if value[:attributes].present?
           rec = moderation.moderatable
           rec.without_moderation do
@@ -59,9 +59,11 @@ module HasModerated
               # bypass attr_accessible protection
               rec.send(attr_name.to_s+"=", attr_value)
             end
-            rec.save(:validate => false) # don't run validations
+            # don't run validations on save (were already ran when moderation was created)
+            rec.save(:validate => false) if do_save
           end
         end
+        rec
       end
     end
     
