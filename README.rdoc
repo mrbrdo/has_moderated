@@ -119,6 +119,14 @@ This will return the record with modified attributes, but not saved to database.
   
 Just be careful not to call record_preview.save, as this will create a new moderation record.
 
+== Which kind of moderation is it?
+
+You can call the following convenience methods to determine the type of moderation
+
+  moderation.create?
+  moderation.destroy?
+  moderation.update?
+  
 == Bypassing moderation
 To bypass moderation (e.g. for admin users), wrap your code into without_moderation like so:
 

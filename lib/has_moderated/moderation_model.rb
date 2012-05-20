@@ -24,5 +24,17 @@ module HasModerated
     def preview
       HasModerated::ModeratedAttributes::ApplyModeration::apply(self, parsed_data, false)
     end
+    
+    def create?
+      parsed_data[:create].present?
+    end
+    
+    def destroy?
+      parsed_data.to_s == "destroy"
+    end
+    
+    def update?
+      !(create? || destroy?)
+    end
   end
 end

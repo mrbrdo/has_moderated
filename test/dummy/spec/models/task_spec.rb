@@ -482,7 +482,7 @@ describe Task do
   #
   
   context "common features:" do
-    before do
+    it "get_moderation_attributes can be overriden in model" do
       Object.send(:remove_const, 'Task')
       load 'task.rb'
       Object.send(:remove_const, 'Subtask')
@@ -493,14 +493,41 @@ describe Task do
           { :test => "ok" }
         end
       end
-    end
-    it "get_moderation_attributes can be overriden in model" do
       Task.create! :title => "Task 1"
       data = YAML::load(Moderation.last.data)[:create][:attributes]
       data.should_not be_blank
       data[:test].should_not be_blank
       data[:test].should eq("ok")
       data.keys.count.should eq(1)
+    end
+    
+    it "knows if it's a create moderation" do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Object.send(:remove_const, 'Subtask')
+      load 'subtask.rb'
+      Task.has_moderated_create
+      
+      Task.create! :title => "Task 1"
+      
+      Moderation.last.create?.should be_true
+      Moderation.last.destroy?.should be_false
+      Moderation.last.update?.should be_false
+    end
+    
+    it "knows if it's a destroy moderation" do
+      Object.send(:remove_const, 'Task')
+      load 'task.rb'
+      Object.send(:remove_const, 'Subtask')
+      load 'subtask.rb'
+      Task.has_moderated_destroy
+      
+      Task.create! :title => "Task 1"
+      Task.last.destroy
+      
+      Moderation.last.destroy?.should be_true
+      Moderation.last.create?.should be_false
+      Moderation.last.update?.should be_false
     end
   end
   
