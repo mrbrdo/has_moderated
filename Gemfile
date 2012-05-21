@@ -10,15 +10,4 @@ gemspec
 # Git. Remember to move these dependencies to your gemspec before releasing
 # your gem to rubygems.org.
 
-# To use debugger
-# gem 'ruby-debug'
-gem 'rspec'
-gem 'rspec-rails'
-gem 'rails3-generators'
 gem 'carrierwave'
-gem 'ruby-debug'
-gem 'rmagick'
-
-gem 'spork'
-gem 'guard-spork'
-gem 'guard-rspec'
