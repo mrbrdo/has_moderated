@@ -46,9 +46,18 @@ module HasModerated
       end
       
       def create_moderation_with_hooks!(*args)
-        m = self.moderations.build(:data => args.first)
+        is_create = args.first[:create].present?
+        if is_create
+          m = Moderation.new
+          m.moderatable_type = self.class.to_s
+        else
+          m = self.moderations.build
+        end
+        m.data = args.first
         HasModerated::Common::call_creating_hook(self, m)
-        m.save!
+        # if self is a new_record? then let AR create the moderations
+        # when self is saved
+        m.save! if is_create || !self.new_record?
         m
       end
       

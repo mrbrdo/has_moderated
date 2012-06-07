@@ -4,7 +4,15 @@ module HasModerated
       module AssociationPatches
         # moderate adding associations
         def add_to_target_with_moderation record
-          if owner.moderation_disabled
+          # If create is moderated, then add assoc. record normally, as create moderation
+          # will prevent AR from creating the assoc. record in DB.
+          # However, if create is not moderated, and owner is a new record,
+          # then AR will create the assoc. record on
+          # owner.save. In this case, add moderation as association now - see
+          # create_moderation_with_hooks - the moderation will be saved when owner is saved,
+          # so AR will properly set moderatable_id.
+          create_moderated_and_new = owner.new_record? && owner.class.respond_to?(:moderated_create_options)
+          if create_moderated_and_new || owner.moderation_disabled
             add_to_target_without_moderation record
           else
             owner.add_associations_moderated(self.reflection.name => [record])
