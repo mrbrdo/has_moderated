@@ -71,7 +71,7 @@ module HasModerated
       
         def self.apply_add_association(to, reflection, attrs)
           klass = reflection.class_name.constantize
-          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection)
+          fk = HasModerated::ActiveRecordHelpers::foreign_key(reflection)
         
           attrs = HashWithIndifferentAccess.new(attrs) if attrs.kind_of? Hash
           
@@ -119,7 +119,7 @@ module HasModerated
         def self.apply_delete_association(to, reflection, attrs)
           m = reflection.class_name.constantize
 
-          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection)
+          fk = HasModerated::ActiveRecordHelpers::foreign_key(reflection)
 
           return if attrs.blank?
           return if attrs.class != Fixnum

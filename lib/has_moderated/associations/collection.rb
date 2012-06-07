@@ -85,14 +85,14 @@ module HasModerated
         end
 
         def self.add_assoc_to_record_hm(to, record, reflection)
-          fk = HasModerated::Adapters::ActiveRecord::foreign_key(reflection).try(:to_s)
+          fk = HasModerated::ActiveRecordHelpers::foreign_key(reflection).try(:to_s)
           field = if !reflection.options[:as].blank?
             reflection.options[:as].to_s
           elsif !fk.blank?
             all_keys = []
             results = record.class.reflections.reject do |assoc_name, assoc|
-              all_keys.push(HasModerated::Adapters::ActiveRecord::foreign_key(assoc).try(:to_s))
-              !(HasModerated::Adapters::ActiveRecord::foreign_key(assoc).try(:to_s) == fk)
+              all_keys.push(HasModerated::ActiveRecordHelpers::foreign_key(assoc).try(:to_s))
+              !(HasModerated::ActiveRecordHelpers::foreign_key(assoc).try(:to_s) == fk)
             end
             if results.blank?
               raise "Please set foreign_key for both belongs_to and has_one/has_many! fk: #{fk}, keys: #{all_keys.to_yaml}"

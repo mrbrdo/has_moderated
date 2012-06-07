@@ -44,7 +44,7 @@ module HasModerated
 
       def to_moderation_created
         options = self.class.moderated_create_options
-        assoc_attrs = HasModerated::Adapters::ActiveRecord::get_assocs_for_moderation(options[:with_associations], self)
+        assoc_attrs = HasModerated::ActiveRecordHelpers::get_assocs_for_moderation(options[:with_associations], self)
 
         create_moderation_with_hooks!(:create => {
           :attributes => get_moderation_attributes,

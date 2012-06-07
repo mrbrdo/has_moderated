@@ -10,7 +10,7 @@ module HasModerated
           attr_accessor :moderation_disabled
           @@moderation_disabled = false
         end  
-        HasModerated::Adapters::Proxy::add_moderations_association klass
+        HasModerated::ActiveRecordHelpers::add_moderations_association klass
       end
     end
     
@@ -42,7 +42,7 @@ module HasModerated
       end
       
       def get_moderation_attributes
-        HasModerated::Adapters::Proxy::get_default_moderation_attributes(self)
+        HasModerated::ActiveRecordHelpers::get_default_moderation_attributes(self)
       end
       
       def create_moderation_with_hooks!(*args)
@@ -68,7 +68,7 @@ module HasModerated
           assocs_processed[assoc_name] = []
           assoc_data_array.each do |assoc_data|
             # convert assoc data to either ID or, if it's a new record, hash of its attributes
-            pdata = HasModerated::Adapters::Proxy::hashize_association(self, assoc_name, assoc_data)
+            pdata = HasModerated::ActiveRecordHelpers::hashize_association(self, assoc_name, assoc_data)
             assocs_processed[assoc_name].push(pdata)
           end
         end
