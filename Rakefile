@@ -22,17 +22,17 @@ end
 
 Bundler::GemHelper.install_tasks
 
-=begin
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = 'test/dummy/spec{,/*/**}/*_spec.rb'
 end
-=end
 
+=begin
 task :spec do
   puts "Running RSpec tests in test/dummy/spec..."
   system("export DISPLAY=:99.0 && cd test/dummy && bundle exec rspec spec")
   raise "RSpec tests failed!" unless $?.exitstatus == 0
 end
+=end
 
 task :default  => [:spec]
