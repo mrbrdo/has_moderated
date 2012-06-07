@@ -256,7 +256,7 @@ describe Task do
       subtask.title.should eq("Subtask 1")
     end
     
-    it "associates an existing subtask on create 2", :focus => true do
+    it "associates an existing subtask on create 2" do
       Subtask.create! :title => "Subtask 1"
       Subtask.count.should eq(1)
       Moderation.count.should eq(0)
@@ -265,11 +265,12 @@ describe Task do
       task.renamed_subtasks << Subtask.first
       task.save
       
+      Task.count.should eq(0)
       Moderation.count.should eq(1)
       Moderation.last.accept
       Moderation.count.should eq(0)
       
-      Task.first.renamed_subtasks.count.should eq(1)
+      Task.last.renamed_subtasks.count.should eq(1)
       subtask = Task.first.renamed_subtasks.first
       subtask.title.should eq("Subtask 1")
     end
@@ -494,8 +495,9 @@ describe Task do
     end
     
     it "moderates an attribute" do
-      Task.create! :title => "Task 1"
+      Task.create! :title => "Task 1", :desc => "Description"
       Task.first.title.should be_blank
+      Task.first.desc.should eq("Description")
       Moderation.last.accept
       Task.first.title.should eq("Task 1")
       Task.first.update_attribute(:title, "Task 2")

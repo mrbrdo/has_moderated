@@ -107,7 +107,8 @@ module HasModerated
                 # TODO: validations? sup?
               end
               if reflection.collection?
-                rec.send(reflection.name.to_s) << arec unless rec.send(reflection.name.to_s).include?(arec)
+                rec = rec.reload
+                #rec.send(reflection.name.to_s) << arec unless rec.send(reflection.name.to_s).include?(arec)
               else
                 rec.send(reflection.name.to_s + "=", arec)
               end
