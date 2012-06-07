@@ -228,6 +228,7 @@ describe Task do
       subtask.title.should eq("Subtask 1")
     end
   end
+  
   context "has_and_belongs_to_many association (create moderation):" do
     before :each do # important that we do this before EACH
       reload_task_subtask
@@ -427,6 +428,57 @@ describe Task do
       
       Moderation.last.accept
       Task.first.renamed_subtask.should be_nil
+    end
+  end
+  
+  context "has_one association (create moderation):" do
+    before :each do
+      reload_task_subtask
+      Task.has_one :renamed_subtask, :class_name => "Subtask"
+      Task.has_moderated_create :with_associations => [:renamed_subtask]
+    end
+    
+    it "associates an existing subtask on create 1" do
+      Task.has_moderated_association :renamed_subtask
+      Subtask.create! :title => "Subtask 1"
+      Subtask.count.should eq(1)
+      Moderation.count.should eq(0)
+
+      task = Task.new :title => "Task 1"
+      task.renamed_subtask = Subtask.first
+      task.save
+      
+      Subtask.first.task_id.should be_nil
+
+      Task.count.should eq(0)
+      Moderation.count.should eq(1)
+      Moderation.last.accept
+      Moderation.count.should eq(0)
+      Subtask.first.task_id.should_not be_nil
+
+      subtask = Task.first.renamed_subtask
+      subtask.title.should eq("Subtask 1")
+    end
+    
+    it "associates an existing subtask on create 2" do
+      Subtask.create! :title => "Subtask 1"
+      Subtask.count.should eq(1)
+      Moderation.count.should eq(0)
+
+      task = Task.new :title => "Task 1"
+      task.renamed_subtask = Subtask.first
+      task.save
+      
+      Subtask.first.task_id.should be_nil
+
+      Task.count.should eq(0)
+      Moderation.count.should eq(1)
+      Moderation.last.accept
+      Moderation.count.should eq(0)
+      Subtask.first.task_id.should_not be_nil
+
+      subtask = Task.first.renamed_subtask
+      subtask.title.should eq("Subtask 1")
     end
   end
   
