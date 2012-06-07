@@ -229,7 +229,7 @@ describe Task do
     end
   end
   context "has_and_belongs_to_many association (create moderation):" do
-    before do
+    before :each do # important that we do this before EACH
       reload_task_subtask
       Task.has_moderated_create :with_associations => [:renamed_subtasks]
       Task.has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
@@ -256,7 +256,7 @@ describe Task do
       subtask.title.should eq("Subtask 1")
     end
     
-    it "associates an existing subtask on create 2" do
+    it "associates an existing subtask on create 2", :focus => true do
       Subtask.create! :title => "Subtask 1"
       Subtask.count.should eq(1)
       Moderation.count.should eq(0)
