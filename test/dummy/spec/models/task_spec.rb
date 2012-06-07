@@ -1,5 +1,12 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
+def reload_task_subtask
+  Object.send(:remove_const, 'Task') if defined? Task
+  load 'task.rb'
+  Object.send(:remove_const, 'Subtask') if defined? Subtask
+  load 'subtask.rb'
+end
+
 describe Task do
   
   #
@@ -9,10 +16,7 @@ describe Task do
   
   context "has_many association:" do
     before do
-      Object.send(:remove_const, 'Task') if defined? Task
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask') if defined? Subtask
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_many :renamed_subtasks, :class_name => "Subtask"
       Task.has_moderated_association :renamed_subtasks
     end
@@ -121,10 +125,7 @@ describe Task do
   
   context "has_many polymorphic association:" do
     before do
-      Object.send(:remove_const, 'Task') if defined? Task
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask') if defined? Subtask
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_many :renamed_subtasks, :class_name => "Subtask", :as => :parentable
       Subtask.belongs_to :parentable, :polymorphic => true
       Task.has_moderated_association :renamed_subtasks
@@ -155,10 +156,7 @@ describe Task do
   
   context "has_one polymorphic association:" do
     before do
-      Object.send(:remove_const, 'Task') if defined? Task
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask') if defined? Subtask
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_one :renamed_subtask, :class_name => "Subtask", :as => :parentable
       Subtask.belongs_to :parentable, :polymorphic => true
       Task.has_moderated_association :renamed_subtask
@@ -190,10 +188,7 @@ describe Task do
   
   context "has_and_belongs_to_many association:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
       Subtask.has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
       Task.has_moderated_association :renamed_subtasks
@@ -235,10 +230,7 @@ describe Task do
   end
   context "has_and_belongs_to_many association (create moderation):" do
     before do
-      Object.send(:remove_const, 'Task') if defined? Task
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask') if defined? Subtask
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated_create :with_associations => [:renamed_subtasks]
       Task.has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
       Subtask.has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
@@ -290,10 +282,7 @@ describe Task do
   
   context "has_many :through association:" do
     before do
-      Object.send(:remove_const, 'Task')  if defined? Task
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask') if defined? Subtask
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m1_id"
       Task.has_many :renamed_subtasks, :class_name => "Subtask", :through => :renamed_connections, :source => :renamed_subtask
       Subtask.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m2_id"
@@ -383,10 +372,7 @@ describe Task do
   
   context "has_one association:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_one :renamed_subtask, :class_name => "Subtask"
       Task.has_moderated_association :renamed_subtask
     end
@@ -449,10 +435,7 @@ describe Task do
   
   context "create moderation with association:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_many :renamed_subtasks, :class_name => "Subtask"
       Task.has_moderated_create :with_associations => [:renamed_subtasks]
     end
@@ -486,10 +469,7 @@ describe Task do
   
   context "destroy moderation:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated_destroy
     end
     
@@ -509,10 +489,7 @@ describe Task do
   
   context "moderates attributes:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated :title
     end
     
@@ -534,10 +511,7 @@ describe Task do
   
   context "common features:" do
     it "get_moderation_attributes can be overriden in model" do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated_create
       Task.class_eval do
         def get_moderation_attributes
@@ -553,10 +527,7 @@ describe Task do
     end
     
     it "knows if it's a create moderation" do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated_create
       
       Task.create! :title => "Task 1"
@@ -567,10 +538,7 @@ describe Task do
     end
     
     it "knows if it's a destroy moderation" do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated_destroy
       
       Task.create! :title => "Task 1"
@@ -584,10 +552,7 @@ describe Task do
   
   context "hooks:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
-      Object.send(:remove_const, 'Subtask')
-      load 'subtask.rb'
+      reload_task_subtask
       Task.has_moderated :title
       Task.moderation_creating do |moderation|
         moderation.data = "Test!"
@@ -603,8 +568,7 @@ describe Task do
   
   context "preview:" do
     before do
-      Object.send(:remove_const, 'Task')
-      load 'task.rb'
+      reload_task_subtask
       Task.has_moderated :title
     end
     
