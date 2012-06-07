@@ -514,6 +514,13 @@ describe Task do
       Task.last.renamed_subtasks.count.should eq(1)
       Task.last.renamed_subtasks.first.title.should eq("Subtask 1")
     end
+    
+    it "doesn't create anything if nothing was created" do
+      task = Task.create! :title => "Task 1"
+      Moderation.last.accept
+      
+      Task.first.renamed_subtasks.count.should eq(0)
+    end
   end
   
   #
