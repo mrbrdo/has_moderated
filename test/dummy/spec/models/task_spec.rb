@@ -228,6 +228,7 @@ describe Task do
       Moderation.last.accept
       Moderation.count.should eq(0)
       
+      Task.first.renamed_subtasks.count.should eq(1)
       subtask = Task.first.renamed_subtasks.first
       subtask.title.should eq("Subtask 1")
     end

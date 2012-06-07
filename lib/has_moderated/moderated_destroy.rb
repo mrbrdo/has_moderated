@@ -13,7 +13,7 @@ module HasModerated
     
     module ApplyModeration
       def self.apply(moderation, value)
-        if value.to_s == "destroy"
+        if value[:destroy] == true
           moderation.moderatable.without_moderation { |m| m.destroy }
         end
       end
@@ -30,7 +30,7 @@ module HasModerated
       end
 
       def to_moderation_destroyed
-        create_moderation_with_hooks!(:destroy)
+        create_moderation_with_hooks!(:destroy => true)
       end
     end
   end

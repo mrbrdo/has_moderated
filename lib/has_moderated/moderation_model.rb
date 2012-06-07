@@ -30,7 +30,7 @@ module HasModerated
     end
     
     def destroy?
-      parsed_data.to_s == "destroy"
+      parsed_data[:destroy] == true
     end
     
     def update?
