@@ -1,4 +1,8 @@
 language: ruby
+branches:
+  only:
+    - master
+    - travis
 before_script:
   - "cd test/dummy && rake db:schema:load && rake db:test:prepare"
 rvm:
