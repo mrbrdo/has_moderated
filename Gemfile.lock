@@ -86,8 +86,6 @@ GEM
       activesupport (= 3.2.5)
       bundler (~> 1.0)
       railties (= 3.2.5)
-    rails3-generators (0.17.4)
-      railties (>= 3.0.0)
     railties (3.2.5)
       actionpack (= 3.2.5)
       activesupport (= 3.2.5)
@@ -140,7 +138,6 @@ DEPENDENCIES
   guard-spork
   has_moderated!
   pry
-  rails3-generators
   rmagick
   rspec
   rspec-rails

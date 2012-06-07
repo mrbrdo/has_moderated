@@ -24,15 +24,13 @@ Bundler::GemHelper.install_tasks
 
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
+  spec.rspec_opts = %w(--color)
   spec.pattern = 'test/dummy/spec{,/*/**}/*_spec.rb'
 end
 
-=begin
-task :spec do
-  puts "Running RSpec tests in test/dummy/spec..."
-  system("export DISPLAY=:99.0 && cd test/dummy && bundle exec rspec spec")
-  raise "RSpec tests failed!" unless $?.exitstatus == 0
+task :prepare_test_env do
+  puts "Preparing test environment..."
+  system("cd test/dummy && RAILS_ENV=test rake db:schema:load") # db:test:prepare
 end
-=end
 
 task :default  => [:spec]
