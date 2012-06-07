@@ -227,6 +227,8 @@ It is also possible you will encounter problems with some heavily customized ass
 
 This is just for my personal todo list...
 
+improve functionality when rerunning has_moderated:install generator
+
 hm maybe has_moderated_association could be just a has_moderated_create on the assoc? just check stuff like if task_id is not nil or something. could be much easier to implement then
 
 also maybe use dirty https://github.com/rails/rails/blob/master/activemodel/lib/active_model/dirty.rb
