@@ -10,11 +10,12 @@ def tmpEmpty?
 end
 
 def uploadEmpty?
-  dirEmpty?(UPLOADDIR)
+  photoModel = crazy_models.get_klass(:Photo)
+  dir = File.expand_path("../../../public/uploads/#{photoModel.to_s.underscore}/avatar", __FILE__)
+  dirEmpty?(dir)
 end
 
 TEMPDIR = File.expand_path("../../../public/uploads/tmp", __FILE__)
-UPLOADDIR = File.expand_path("../../../public/uploads/photo/avatar/1", __FILE__)
 
 def carrierwave_test_photo
   test_photo_path = File.expand_path("../../../public/test.jpg", __FILE__)

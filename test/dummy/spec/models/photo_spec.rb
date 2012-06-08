@@ -1,13 +1,9 @@
 require File.expand_path('../../spec_helper', __FILE__)
-require File.expand_path('../../support/photos', __FILE__)
 
-def reload_task_photo
-  Object.send(:remove_const, 'Task') if defined? Task
-  load 'task.rb'
-  Object.send(:remove_const, 'Subtask') if defined? Subtask
-  load 'subtask.rb'
-  Object.send(:remove_const, 'Photo') if defined? Photo
-  load 'photo.rb'
+def reload_models
+  crazy_models.reset
+  crazy_models.with_helpers &block if block_given?
+  crazy_models
 end
 
 describe Photo do
@@ -18,10 +14,12 @@ describe Photo do
   
   context "create moderated:" do
     before do
-      reload_task_photo
-      Photo.has_moderated_create
-      Photo.send :include, HasModerated::CarrierWave
-      Photo.has_moderated_carrierwave_field :avatar
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        has_moderated_create
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+      }
     end
     
     it "should upload photo" do
@@ -42,7 +40,9 @@ describe Photo do
 
   context "not moderated:" do
     before do
-      reload_task_photo
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+      }
     end
     
     it "should upload photo" do
@@ -59,10 +59,12 @@ describe Photo do
   
   context "update moderated:" do
     before do
-      reload_task_photo
-      Photo.send :include, HasModerated::CarrierWave
-      Photo.has_moderated_carrierwave_field :avatar
-      Photo.has_moderated :avatar
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        has_moderated :avatar
+      }
     end
 
     it "should moderate photo (on create)" do
@@ -101,13 +103,19 @@ describe Photo do
   
   context "moderated as association to has_moderated_create:" do
     before do
-      reload_task_photo
-      Task.has_many :renamed_subtasks, :class_name => "Subtask"
-      Task.has_many :photos, :foreign_key => "parentable_id"
-      Task.has_moderated_create :with_associations => [:photos, :renamed_subtasks]
-      Photo.send :include, HasModerated::CarrierWave
-      Photo.has_moderated_carrierwave_field :avatar
-      Photo.belongs_to :task, :foreign_key => "parentable_id"
+      reload_models.task {
+        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+        has_moderated_create :with_associations => [:photos, :renamed_subtasks]
+      }.subtask {
+        belongs_to :task, :class_name => task_class_name
+      }.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+      }
+      
     end
     
     it "should upload photo" do
