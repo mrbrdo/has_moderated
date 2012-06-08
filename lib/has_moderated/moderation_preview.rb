@@ -20,6 +20,10 @@ module HasModerated
         attributes[name]
       end
       
+      def id
+        attributes["id"]
+      end
+      
       def to_s
         "#<HasModerated::Fake#{@fake_of_model.to_s}>"
       end
