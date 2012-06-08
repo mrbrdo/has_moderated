@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.rc6
+
+* Make tests pass on 1.8.x and rubinius.
+
 ## v1.0.rc5
 
 * Support moderation.preview for associations
