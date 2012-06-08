@@ -130,12 +130,7 @@ module HasModerated
         end
       
         # add/delete associations to a record
-        def self.apply(moderation, data)
-          record = if moderation.kind_of? Moderation
-            moderation.moderatable
-          else
-            moderation
-          end
+        def self.apply(record, data)
           associations = data[:associations]
           delete_associations = data[:delete_associations]
           
@@ -154,6 +149,8 @@ module HasModerated
               apply_delete_association(record, reflection, attrs) if attrs.present?
             end
           end
+          
+          record
         end
       end # module
     end

@@ -12,9 +12,12 @@ module HasModerated
     end
     
     module ApplyModeration
-      def self.apply(moderation, value)
+      def self.apply(record, value)
         if value[:destroy] == true
-          moderation.moderatable.without_moderation { |m| m.destroy }
+          record.without_moderation { |m| m.destroy }
+          nil
+        else
+          record
         end
       end
     end

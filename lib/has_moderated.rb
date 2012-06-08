@@ -1,6 +1,7 @@
 require 'has_moderated/common'
 require 'has_moderated/user_hooks'
 require 'has_moderated/moderation_model'
+require 'has_moderated/moderation_preview'
 
 require 'has_moderated/active_record/active_record_helpers'
 require 'has_moderated/associations/base'

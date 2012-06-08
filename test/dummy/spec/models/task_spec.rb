@@ -7,6 +7,15 @@ def reload_task_subtask
   load 'subtask.rb'
 end
 
+def reload_models
+  Object.send(:remove_const, 'Task') if defined? Task
+  Object.send(:remove_const, 'Subtask') if defined? Subtask
+  Object.send(:remove_const, 'TaskConnection') if defined? TaskConnection
+  Object.send(:load, 'task.rb')
+  Object.send(:load, 'subtask.rb')
+  Object.send(:load, 'task_connection.rb')
+end
+
 describe Task do
   
   #
@@ -284,7 +293,7 @@ describe Task do
   
   context "has_many :through association:" do
     before do
-      reload_task_subtask
+      reload_models
       Task.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m1_id"
       Task.has_many :renamed_subtasks, :class_name => "Subtask", :through => :renamed_connections, :source => :renamed_subtask
       Subtask.has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m2_id"
@@ -628,18 +637,87 @@ describe Task do
   end
   
   context "preview:" do
-    before do
+    it "shows a live preview of changed attributes" do
       reload_task_subtask
       Task.has_moderated :title
+      Task.create! :title => "Task 1"
+      Task.last.title.should be_blank
+      
+      last_task_id = Task.last.id
+      Moderation.last.live_preview do |preview|
+        preview.title.should eq("Task 1")
+        preview.id.should eq(last_task_id)
+      end
+      
+      Task.last.title.should be_blank
     end
     
-    it "shows a preview of changed attributes" do
-      Task.create! :title => "Task 1"
+    it "shows a saved preview of changed attributes" do
+      reload_task_subtask
+      Task.has_moderated :title
+      Task.has_many :renamed_subtasks, :class_name => "Subtask"
+      Task.has_moderated_association :renamed_subtasks
+      
+      task = Task.create! :title => "Task 1"
       Task.last.title.should be_blank
       
       preview = Moderation.last.preview
       preview.title.should eq("Task 1")
       preview.id.should eq(Task.last.id)
+      Task.last.title.should be_blank
+      Moderation.last.discard
+      
+      task.renamed_subtasks.create! :title => "Subtask 1"
+      preview = Moderation.last.preview
+      subtask = preview.renamed_subtasks.first
+      subtask.title.should eq("Subtask 1")
+      subtask.id.should_not be_blank
+      subtask.task.should_not be_blank
+      
+      Task.last.title.should be_blank
+      Task.last.renamed_subtasks.count.should eq(0)
+      Subtask.count.should eq(0)
+    end
+    
+    it "shows a saved preview for has_many :through", :focus do
+      crazy_models.reset.task {
+        attr_accessible :title, :desc
+        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m1_id"
+        has_many :renamed_subtasks, :class_name => subtask_class_name, :through => :renamed_connections, :source => :renamed_subtask
+        has_moderated_association :renamed_subtasks
+        has_moderated_association :renamed_connections
+      }.subtask {
+        attr_accessible :title, :desc
+        belongs_to :task
+        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m2_id"
+        has_many :renamed_tasks, :class_name => task_class_name, :through => :renamed_connections, :source => :renamed_task
+      }.task_connection {
+        belongs_to :renamed_task, :class_name => task_class_name, :foreign_key => "m1_id"
+        belongs_to :renamed_subtask, :class_name => subtask_class_name, :foreign_key => "m2_id"
+      }
+
+      task = Task.create! :title => "Task 1"
+      conn = TaskConnection.new :title => "Connection 1"
+      conn.renamed_subtask = Subtask.new :title => "Subtask 1"
+      task.renamed_connections << conn
+      task.save
+      
+      TaskConnection.count.should eq(0)
+      Subtask.count.should eq(0)
+      
+      task = Moderation.last.preview
+      
+      TaskConnection.count.should eq(0)
+      Subtask.count.should eq(0)
+      Moderation.count.should eq(1)
+      
+      subtask = task.renamed_subtasks.first
+      subtask.title.should eq("Subtask 1")
+      subtask.renamed_connections.first.should be_present
+      conn = task.renamed_connections.first
+      conn.title.should eq("Connection 1")
+      conn.renamed_subtask.title.should eq("Subtask 1")
+      conn.renamed_task.title.should eq("Task 1")
     end
   end
 end

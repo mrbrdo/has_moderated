@@ -16,19 +16,20 @@ module HasModerated
     end
     
     module ApplyModeration
-      def self.apply(moderation, value)
+      def self.apply(klass, value)
+        rec = nil
         if value[:create].present?
           # create the main record
-          rec = moderation.moderatable_type.constantize.new
+          rec = klass.new
           attrs = value[:create][:attributes]
           # bypass attr_accessible protection
           attrs && attrs.each_pair do |key, val|
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
           rec.without_moderation { rec.save(:validate => false) }
-          moderation.moderatable = rec # just so associations can be applied in next line
-          HasModerated::Associations::Base::ApplyModeration::apply(moderation, value[:create])
+          HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create])
         end
+        rec
       end
     end
     
