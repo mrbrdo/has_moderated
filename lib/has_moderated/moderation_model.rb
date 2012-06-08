@@ -5,11 +5,10 @@ module HasModerated
     end
     
     def accept
-      loaded_val = parsed_data
-      HasModerated::ModeratedCreate::ApplyModeration::apply(self, loaded_val)
-      HasModerated::ModeratedAttributes::ApplyModeration::apply(self, loaded_val)
-      HasModerated::Associations::Base::ApplyModeration::apply(self, loaded_val)
-      HasModerated::ModeratedDestroy::ApplyModeration::apply(self, loaded_val)
+      HasModerated::ModeratedCreate::ApplyModeration::apply(self, parsed_data)
+      HasModerated::ModeratedAttributes::ApplyModeration::apply(self, parsed_data)
+      HasModerated::Associations::Base::ApplyModeration::apply(self, parsed_data)
+      HasModerated::ModeratedDestroy::ApplyModeration::apply(self, parsed_data)
       self.destroy
     end
 
@@ -22,7 +21,11 @@ module HasModerated
     end
     
     def preview
-      HasModerated::ModeratedAttributes::ApplyModeration::apply(self, parsed_data, false)
+      ActiveRecord::Base.transaction do
+        accept
+        yield
+        raise ActiveRecord::Rollback
+      end
     end
     
     def create?
