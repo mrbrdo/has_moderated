@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.rc5
+
+* Support moderation.preview for associations
+
 ## v1.0.rc4
 
 * Refactoring
@@ -9,4 +13,4 @@
 
 ## v0.0.34
 
-* Now moderates deleting associations when using has_moderated_association
+* Now moderates deleting associations when using has\_moderated\_association

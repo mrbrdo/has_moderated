@@ -8,12 +8,26 @@ module HasModerated
       
       attr_accessor :attributes
       
+      def initialize(fake_of_model)
+        @fake_of_model = fake_of_model
+      end
+      
       def persisted?
         false
       end
       
       def attribute name
         attributes[name]
+      end
+      
+      def to_s
+        "#<HasModerated::Fake#{@fake_of_model.to_s}>"
+      end
+      
+      def inspect
+        to_s.chomp(">") +
+          instance_variables.map{|name| " #{name}=#{instance_variable_get(name)}"}.join(",") +
+          ", reflections.keys => [" + reflections.keys.map{|s| ":#{s}"}.join(", ")+ "]>"
       end
     end
     
@@ -35,7 +49,7 @@ module HasModerated
     
     def self.from_live(record, object_cache = nil)
       return nil if record.blank?
-      obj = FakeRecord.new
+      obj = FakeRecord.new(record.class)
       eigenclass = (class << obj ; self ; end)
       
       obj.instance_variable_set(:@attributes, record.instance_variable_get(:@attributes))
@@ -49,6 +63,9 @@ module HasModerated
       object_cache ||= Hash.new
       object_cache[record.class] ||= Hash.new
       object_cache[record.class][record.id] = obj
+      eigenclass.send(:define_method, :reflections) do
+        record.class.reflections.reject{|k,v| k.to_sym == :moderations}
+      end
       record.class.reflections.values.reject{|s| s.name.to_sym == :moderations}.each do |reflection|
         if reflection.macro == :has_one || reflection.macro == :belongs_to
           create_fake_association(
