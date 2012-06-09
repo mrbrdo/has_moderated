@@ -5,7 +5,7 @@
 
 Add it to your project's Gemfile
 
-  gem "has_moderated", ">=1.0.rc9"
+  gem "has_moderated", ">=1.0.rc8"
 
 and run
 
