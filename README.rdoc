@@ -125,7 +125,7 @@ It also supports dirty tracking through ActiveModel, so you can use all its func
   preview.some_attr_change # => ["old value", "new value"]
   preview.some_association.first # => #<HasModerated::FakeTask @fake_of_model=Task, @attributes={"id"=>1, "title"=>"Task 1", "desc"=>nil, "created_at"=>"2012-06-08 15:49:56.726646", "updated_at"=>"2012-06-08 15:49:56.726646"}, @changed_attributes={}, reflections.keys => [:assoc1, :assoc2]>
   
-This preview is cached from applying the moderation in a transaction and then rolling it back (so it does not *really* affect the database).
+This preview is cached from applying the moderation in a transaction and then rolling it back (so it does not affect the database).
 
 === Get a real ActiveRecord preview
 
@@ -139,6 +139,8 @@ This way, you will get a real ActiveRecord object that is really in the database
     preview.some_association.first # => ActiveRecord object
   end
   
+Note that since a transaction is used in both cases, all the changes made to the database to produce the preview are only in effect inside the transaction, so the changes are only visible inside the transaction. For example, if a second database query comes from another Rails instance, it will not see the changes that are in effect in the transaction, even if the transaction is still in process.
+
 == Which kind of moderation is it?
 
 You can call the following convenience methods to determine the type of moderation
