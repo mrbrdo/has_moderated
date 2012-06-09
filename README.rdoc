@@ -56,26 +56,6 @@ If you have a problem like that you can extract the problematic attributes into 
 
 It is also possible you will encounter problems with some heavily customized associations, or with has_many :through associations (although I have tested this for a simple, ordinary case and it works). If that happens open an issue here on Github.
 
-== My personal TODO (ignore this)
-
-This is just for my personal todo list...
-
-perhaps can use .freeze for preview?
-
-improve functionality when rerunning has_moderated:install generator
-
-hm maybe has_moderated_association could be just a has_moderated_create on the assoc? just check stuff like if task_id is not nil or something. could be much easier to implement then
-
-also maybe use dirty https://github.com/rails/rails/blob/master/activemodel/lib/active_model/dirty.rb
-
-and provide the same interface to show changes before accepting a moderation (just overwrite the dirty methods on the instance, also overwrite save at a low level to throw exception since its only a preview)
-
-to make it possible to support other than activerecord, use activemodel when its possible AND try to make it so its possible to call the last step before activerecord (e.g. a func that reads all the values of current attributes and figures out which ones changed) - and use this in activerecord.
-
-use YARD for docs
-check again railscasts episodes for gems (e.g. railties)
-Preview method which gives changed object but doesnt save it.
-
 == License
 
 This project rocks and uses MIT-LICENSE.
