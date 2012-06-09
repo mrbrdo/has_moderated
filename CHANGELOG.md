@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.rc9
+
+* Updated preview and live\_preview
+* Updated README
+
 ## v1.0.rc6
 
 * Make tests pass on 1.8.x and rubinius.
