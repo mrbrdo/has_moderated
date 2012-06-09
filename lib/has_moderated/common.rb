@@ -1,9 +1,5 @@
 module HasModerated
   module Common
-    def self.included(base)
-      base.send :include, InstanceMethods
-    end
-    
     def self.init(klass)
       unless klass.class_variable_defined? "@@moderation_disabled"
         klass.class_eval do
