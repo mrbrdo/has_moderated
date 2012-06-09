@@ -136,7 +136,7 @@ The fake object described above has a nifty feature (1.0.rc7+) that allows you t
   preview.title = "Task 2"
   preview.update_moderation
   moderation.parsed_data # => {:attributes=>{"title"=>"Task 2"}}
-  moderation.apply
+  moderation.accept
   Task.first.title # => "Task 2"
 
 === Get a real ActiveRecord preview
