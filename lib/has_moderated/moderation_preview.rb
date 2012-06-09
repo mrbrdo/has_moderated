@@ -24,7 +24,7 @@ module HasModerated
       def fake!(based_on_model, based_on_moderation)
         @based_on_model = based_on_model
         @based_on_moderation = based_on_moderation
-        self.freeze
+        freeze
       end
     end
     

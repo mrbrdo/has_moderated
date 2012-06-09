@@ -132,6 +132,7 @@ The preview described above has a nifty feature (1.0.rc7+) that allows you to up
   moderation.parsed_data # => {:attributes=>{"title"=>"Task 1"}}
   preview = moderation.preview(:saveable => true)
   preview.title = "Task 2"
+  preview.title # => "Task 1" *note the change is not reflected here*
   preview.update_moderation
   moderation.parsed_data # => {:attributes=>{"title"=>"Task 2"}}
   moderation.accept
