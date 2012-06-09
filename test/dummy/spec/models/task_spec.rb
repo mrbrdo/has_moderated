@@ -702,6 +702,42 @@ describe Task do
       preview.title_change.should eq([nil, "Task 1"])
     end
     
+    it "supports updating moderation attributes for the saved preview if :saveable => true" do
+      reload_models.task {
+        has_moderated :title
+      }
+      
+      task = Task.create! :title => "Task 1"
+      Task.last.title.should be_blank
+      
+      preview = Moderation.last.preview(:saveable => true)
+      preview.title = "Task 2"
+      preview.update_moderation
+      
+      moderation = Moderation.last
+      moderation.parsed_data.should eq({:attributes=>{"title"=>"Task 2"}})
+      moderation.accept
+      Task.last.title.should eq("Task 2")
+    end
+    
+    it "doesn't support updating moderation attributes for the saved preview by default" do
+      reload_models.task {
+        has_moderated :title
+      }
+      
+      task = Task.create! :title => "Task 1"
+      Task.last.title.should be_blank
+      
+      moderation = Moderation.last
+      preview = Moderation.last.preview
+      expect { preview.title = "Task 2" }.should raise_error
+      expect { preview.update_moderation }.should raise_error
+      
+      moderation = Moderation.last
+      moderation.accept
+      Task.last.title.should eq("Task 1")
+    end
+    
     it "shows a saved preview of has_many association" do
       reload_models.task {
         has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk

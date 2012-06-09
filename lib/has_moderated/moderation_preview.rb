@@ -1,6 +1,25 @@
 require 'ostruct'
 module HasModerated
   module Preview
+    module Saveable
+      def update_moderation
+        if @based_on_moderation.present?
+          data = @based_on_moderation.parsed_data
+        
+          # attributes
+          data[:attributes] ||= Hash.new
+          @attributes.each_pair do |key, value|
+            if value != @attributes_initial[key]
+              data[:attributes][key.to_s] = value
+            end
+          end
+          
+          @based_on_moderation.data = data
+          @based_on_moderation.save
+        end
+      end
+    end
+    
     class FakeRecord
       extend ActiveModel::Naming
       include ActiveModel::Conversion
@@ -8,8 +27,9 @@ module HasModerated
       
       attr_accessor :attributes
       
-      def initialize(fake_of_model)
-        @fake_of_model = fake_of_model
+      def initialize(based_on_model, based_on_moderation)
+        @based_on_model = based_on_model
+        @based_on_moderation = based_on_moderation
       end
       
       def persisted?
@@ -25,7 +45,7 @@ module HasModerated
       end
       
       def to_s
-        "#<HasModerated::Fake#{@fake_of_model.to_s}>"
+        "#<HasModerated::Fake#{@based_on_model.to_s}>"
       end
       
       def inspect
@@ -47,21 +67,33 @@ module HasModerated
       if cache[record.class][record.id].present?
         cache[record.class][record.id]
       else
-        cache[record.class][record.id] = from_live(record, cache)
+        cache[record.class][record.id] = from_live(record, nil, false, cache)
       end
     end
     
-    def self.from_live(record, object_cache = nil)
+    def self.from_live(record, moderation = nil, saveable = false, object_cache = nil)
       return nil if record.blank?
-      obj = FakeRecord.new(record.class)
+      obj = FakeRecord.new(record.class, moderation)
       eigenclass = (class << obj ; self ; end)
       
+      # attributes
       obj.instance_variable_set(:@attributes, record.instance_variable_get(:@attributes))
       changed_attributes = Hash.new
       record.previous_changes.each_pair do |attr_name, values|
         changed_attributes[attr_name] = values[0]
       end
       obj.instance_variable_set(:@changed_attributes, changed_attributes)
+      
+      # saveable
+      if saveable
+        obj.instance_variable_set(:@attributes_initial, record.instance_variable_get(:@attributes).dup)
+        eigenclass.send(:include, Saveable)
+        obj.attributes.keys.each do |attr_name|
+          eigenclass.send(:define_method, "#{attr_name}=") do |value|
+            self.attributes[attr_name.to_s] = value
+          end
+        end
+      end
       
       # associations
       object_cache ||= Hash.new

@@ -44,18 +44,24 @@ module HasModerated
     end
     
     def live_preview
-      ActiveRecord::Base.transaction do
+      self.transaction do
         record = accept
         yield(record)
         raise ActiveRecord::Rollback
       end
+      # self.frozen? now became true
+      # since we don't actually commit to database, we don't need the freeze
+      # only way I found to unfreeze is to dup attributes
+      @attributes = @attributes.dup
+      
       nil
     end
     
-    def preview
+    def preview(options = {})
+      options[:saveable] ||= false
       fake_record = nil
       live_preview do |record|
-        fake_record = HasModerated::Preview::from_live(record)
+        fake_record = HasModerated::Preview::from_live(record, self, options[:saveable])
       end
       fake_record
     end

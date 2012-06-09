@@ -127,6 +127,18 @@ It also supports dirty tracking through ActiveModel, so you can use all its func
   
 This preview is cached from applying the moderation in a transaction and then rolling it back (so it does not affect the database).
 
+=== Using the fake object to modify the moderation
+
+The fake object described above has a nifty feature (1.0.rc7+) that allows you to update attributes in the moderation by manipulating the fake object. Right now it can only handle attributes and not associations, but that might change in the future. See example below on how to use this feature.
+
+  moderation.parsed_data # => {:attributes=>{"title"=>"Task 1"}}
+  preview = moderation.preview(:saveable => true)
+  preview.title = "Task 2"
+  preview.update_moderation
+  moderation.parsed_data # => {:attributes=>{"title"=>"Task 2"}}
+  moderation.apply
+  Task.first.title # => "Task 2"
+
 === Get a real ActiveRecord preview
 
 This way, you will get a real ActiveRecord object that is really in the database. You can do whatever you want on it, however the difference is that you need to use it inside the live_preview block. This is because the moderation is applied in a transaction and after you are done using the preview, the transaction will be rolled back. I would recommend using the read-only fake object (see above) if you can, as it is safer. But sometimes you just need access to the real ActiveRecord object.
@@ -140,6 +152,23 @@ This way, you will get a real ActiveRecord object that is really in the database
   end
   
 Note that since a transaction is used in both cases, all the changes made to the database to produce the preview are only in effect inside the transaction, so the changes are only visible inside the transaction. For example, if a second database query comes from another Rails instance, it will not see the changes that are in effect in the transaction, even if the transaction is still in process.
+
+=== Example of using preview in your show action
+
+In this example I allow admin users to add a preview parameter to the URL to see the preview of how the record will look after applying a moderation, without having to change code in the views.
+
+  def show
+    @doctor = Doctor.find_by_slug(params[:id])
+    
+    if current_admin_user && params[:preview]
+      @doctor.moderations.find_by_id(params[:preview]).live_preview do |preview|
+        @doctor = preview
+        render :action => "show"
+      end
+    else
+      render :action => "show"
+    end
+  end
 
 == Which kind of moderation is it?
 
