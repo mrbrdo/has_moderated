@@ -1,3 +1,4 @@
+require 'my_gem/railtie' if defined?(Rails)
 require 'has_moderated/common'
 require 'has_moderated/user_hooks'
 require 'has_moderated/moderation_model'
@@ -27,5 +28,3 @@ module HasModerated
     base.send :extend, HasModerated::ModeratedDestroy::ClassMethods
   end
 end
-
-ActiveRecord::Base.send :include, HasModerated
