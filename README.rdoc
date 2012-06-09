@@ -116,20 +116,18 @@ You can see a preview of what a moderation will do.
 
 === Get a read-only preview
 
-This method allows you to retrieve a fake object which behaves like an ActiveRecord object, but is read-only.
-This object allows you to see the value of all attributes, as well as all the associations (including non-moderated).
-It also supports dirty tracking through ActiveModel, so you can use all its functionality (http://api.rubyonrails.org/classes/ActiveModel/Dirty.html).
+You can get a read-only preview of the actual ActiveRecord object. It allows you to see the value of all attributes, as well as all the associations (including non-moderated, except the moderations association). Since it is an ActiveRecord object, it also supports dirty tracking (http://api.rubyonrails.org/classes/ActiveModel/Dirty.html). Note that association methods (preview.some_association) are not real ActiveRecord relations, but just Arrays. If you really need real relations, look at live_preview below.
 
   preview = moderation.preview
   preview.some_attr # => "new value"
   preview.some_attr_change # => ["old value", "new value"]
-  preview.some_association.first # => #<HasModerated::FakeTask @fake_of_model=Task, @attributes={"id"=>1, "title"=>"Task 1", "desc"=>nil, "created_at"=>"2012-06-08 15:49:56.726646", "updated_at"=>"2012-06-08 15:49:56.726646"}, @changed_attributes={}, reflections.keys => [:assoc1, :assoc2]>
+  preview.some_association.first # => AR object
   
-This preview is cached from applying the moderation in a transaction and then rolling it back (so it does not affect the database).
+This preview is cached from applying the moderation in a transaction and then rolling it back (so it does not affect the database). Note if you have custom model methods that return other ActiveRecord records, those records will not be frozen, so if you save those changes WILL be written to the database.
 
-=== Using the fake object to modify the moderation
+=== Using the preview to modify the moderation
 
-The fake object described above has a nifty feature (1.0.rc7+) that allows you to update attributes in the moderation by manipulating the fake object. Right now it can only handle attributes and not associations, but that might change in the future. See example below on how to use this feature.
+The preview described above has a nifty feature (1.0.rc7+) that allows you to update attributes in the moderation by manipulating the fake object. Right now it can only handle attributes and not associations, but that might change in the future. See example below on how to use this feature.
 
   moderation.parsed_data # => {:attributes=>{"title"=>"Task 1"}}
   preview = moderation.preview(:saveable => true)
@@ -139,16 +137,18 @@ The fake object described above has a nifty feature (1.0.rc7+) that allows you t
   moderation.accept
   Task.first.title # => "Task 2"
 
-=== Get a real ActiveRecord preview
+=== Get a live ActiveRecord preview
 
-This way, you will get a real ActiveRecord object that is really in the database. You can do whatever you want on it, however the difference is that you need to use it inside the live_preview block. This is because the moderation is applied in a transaction and after you are done using the preview, the transaction will be rolled back. I would recommend using the read-only fake object (see above) if you can, as it is safer. But sometimes you just need access to the real ActiveRecord object.
+Usually you don't need to use this. The difference compared to the above method is that the above will freeze objects from the database and then roll back the transaction, and you will get the frozen copies that you can use at will. Those copies do have fake association methods that just return Arrays instead of AR relations.
+
+In contrast to preview, live_preview will let you use the record while the transaction is still going on, so it is not even frozen. Also the association methods are real ActiveRecord relations in this case. After your block completes, the transaction will be rolled back and you will not have access to the preview anymore (and you should not use it outside of the block).
 
   moderation.live_preview do |preview|
     preview.some_attr # => "new value"
     # note how we need to use .previous_changes when using live_preview,
     # .changes will be blank as the record has already been saved to DB
     preview.previous_changes # => {"attr"=>["old", "new"]}
-    preview.some_association.first # => ActiveRecord object
+    preview.some_association.first # => AR object
   end
   
 Note that since a transaction is used in both cases, all the changes made to the database to produce the preview are only in effect inside the transaction, so the changes are only visible inside the transaction. For example, if a second database query comes from another Rails instance, it will not see the changes that are in effect in the transaction, even if the transaction is still in process.
