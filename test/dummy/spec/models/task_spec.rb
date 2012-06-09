@@ -730,6 +730,7 @@ describe Task do
       
       moderation = Moderation.last
       preview = Moderation.last.preview
+      preview.frozen?.should be_true
       expect { preview.title = "Task 2" }.should raise_error
       expect { preview.update_moderation }.should raise_error
       
@@ -798,6 +799,16 @@ describe Task do
       conn.title.should eq("Connection 1")
       conn.renamed_subtask.title.should eq("Subtask 1")
       conn.renamed_task.title.should eq("Task 1")
+      
+      # everything has to be frozen
+      task.frozen?.should be_true
+      task.renamed_subtasks.frozen?.should be_true
+      task.renamed_connections.frozen?.should be_true
+      subtask.frozen?.should be_true
+      subtask.renamed_connections.frozen?.should be_true
+      conn.frozen?.should be_true
+      conn.renamed_task.frozen?.should be_true
+      conn.renamed_subtask.frozen?.should be_true
     end
   end
 end
