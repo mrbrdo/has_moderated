@@ -1,5 +1,11 @@
 module HasModerated
   module ModerationModel
+    def included?(base)
+      base.class_eval do
+        alias_method_chain :destroy, :callbacks
+      end
+    end
+    
     def parsed_data
       @parsed_data ||= YAML::load(data)
     end
@@ -34,13 +40,17 @@ module HasModerated
       self.destroy
       record
     end
-
-    def discard
+    
+    def destroy_with_callbacks
       if moderatable_type
         klass = moderatable_type.constantize
         klass.moderatable_discard(self) if klass.respond_to?(:moderatable_discard)
       end
-      self.destroy
+      destroy_without_callbacks
+    end
+
+    def discard
+      destroy_with_callbacks
     end
     
     def live_preview
