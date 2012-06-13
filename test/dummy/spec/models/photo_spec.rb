@@ -99,6 +99,15 @@ describe Photo do
       photo = Photo.first
       assert_photo_uploaded(photo.avatar)
     end
+    
+    it "should delete temporary files if moderation is discarded" do
+      photo = Photo.create! :avatar => carrierwave_test_photo
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      Moderation.last.discard
+      tmpEmpty?.should be_true
+      uploadEmpty?.should be_true
+    end
   end
   
   context "moderated as association to has_moderated_create:" do

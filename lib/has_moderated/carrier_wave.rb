@@ -82,7 +82,7 @@ module HasModerated
               value = value[:create]
             end
             if value.has_key?(:attributes) && value[:attributes].has_key?("#{field_name}_tmp_file")
-              value = value[:attributes].send("#{field_name}_tmp_file")
+              value = value[:attributes]["#{field_name}_tmp_file"]
               if value.present?
                 HasModerated::CarrierWave::photo_tmp_delete(value)
               end

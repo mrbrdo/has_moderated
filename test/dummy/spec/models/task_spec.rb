@@ -638,6 +638,17 @@ describe Task do
       Moderation.last.create?.should be_false
       Moderation.last.update?.should be_false
     end
+    
+    it "calls moderation callbacks on destroy" do
+      reload_models.task {
+        has_moderated_create
+        def self.moderatable_discard(m)
+          raise "moderatable_discard"
+        end
+      }
+      Task.create!
+      expect { Moderation.last.destroy }.should raise_error("moderatable_discard")
+    end
   end
   
   context "hooks:" do

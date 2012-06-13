@@ -1,8 +1,8 @@
 module HasModerated
   module ModerationModel
-    def included?(base)
+    def self.included(base)
       base.class_eval do
-        alias_method_chain :destroy, :callbacks
+        alias_method_chain :destroy, :moderation_callbacks
       end
     end
     
@@ -41,16 +41,16 @@ module HasModerated
       record
     end
     
-    def destroy_with_callbacks
+    def destroy_with_moderation_callbacks
       if moderatable_type
         klass = moderatable_type.constantize
         klass.moderatable_discard(self) if klass.respond_to?(:moderatable_discard)
       end
-      destroy_without_callbacks
+      destroy_without_moderation_callbacks
     end
 
     def discard
-      destroy_with_callbacks
+      destroy_with_moderation_callbacks
     end
     
     def live_preview
