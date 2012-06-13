@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.rc10
+
+* Use get\_moderation\_attributes when using has\_moderated to moderate attributes on update (previously only used in create moderations).
+
 ## v1.0.rc9
 
 * Updated preview and live\_preview

@@ -72,7 +72,7 @@ module HasModerated
           if self.class.moderated_attributes.include?(att_name) && !(values[0].blank? && values[1].blank?)
             moderations.push(create_moderation_with_hooks!(
               :attributes => {
-                att_name => self.attributes[att_name]
+                att_name => self.get_moderation_attributes[att_name]
               }
             ))
             self.send(att_name+"=", values[0])
