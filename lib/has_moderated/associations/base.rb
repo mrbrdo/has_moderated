@@ -1,3 +1,9 @@
+module ActiveRecord
+  class Base
+    attr_accessor :moderation_view
+  end
+end
+
 module HasModerated
   module Associations
     module Base
@@ -42,6 +48,50 @@ module HasModerated
             end
           end
         end
+
+        def viewable(moderation)
+          mod_obj = moderation.moderatable
+          unless mod_obj.nil?
+            attrs = moderation.parsed_data[:attributes]
+            set_mod_associations(mod_obj, moderation.parsed_data)
+          else
+            attrs = moderation.parsed_data[:create][:attributes]
+            mod_obj = self.new
+            mod_obj.moderation_view = true
+            set_mod_associations(mod_obj, moderation.parsed_data[:create])
+          end
+          set_mod_attrs(mod_obj, attrs)
+          mod_obj.moderation_view = true
+          return mod_obj
+        end
+
+        private
+        def set_mod_attrs(mod_obj, attrs)
+          attrs && attrs.each_pair do |key, val|
+            mod_obj.send(key.to_s+"=", val) unless key.to_s == 'id'
+          end
+        end
+ 
+        def set_mod_associations(mod_obj, mod_hash)
+          associations = mod_hash[:associations]
+          associations_array = []
+          img_associations_array = []
+          unless associations.blank?
+            associations.each do |association_name, association_values|
+              reflection = self.reflect_on_association(association_name)
+              klass = eval("#{reflection.class_name}")
+              if reflection.collection?
+                assoc = eval('mod_obj.' + association_name.to_s)
+                for association_value in association_values
+                  assoc << klass.find(association_value)
+                end
+              else
+                eval('mod_obj.' + association_name.to_s + ' = ' + "klass.find(association_values.first)")
+              end
+            end
+          end
+        end
+
       end # module
       
       module ApplyModeration
