@@ -8,6 +8,76 @@ end
 
 describe Task do
   
+  context "moderation class allows one to view a moderation's moderatable object without it being saved to the database first" do
+    before do
+      reload_models.task {
+        has_one :current_subtask, :class_name => subtask_class_name, :as => :parentable
+        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+        has_moderated_create :with_associations => [:renamed_subtasks, :current_subtask]
+      }.subtask {
+        belongs_to :task, :class_name => task_class_name, :foreign_key => task_fk
+      }
+    end
+
+    it "viewing the object gives valid column results, and does not effect the moderation or moderated class database" do
+      task = Task.create! :title => "Task 1"
+      Moderation.count.should eq(1)
+      Task.count.should eq(0) 
+
+      moderation = Moderation.last
+
+      viewable_task = Task.viewable(moderation)
+      Moderation.count.should eq(1) 
+      Task.count.should eq(0) 
+
+      viewable_task.title.should eq(task.title)
+    end
+
+    it "ensures that by viewing a moderated version of an object it still returns valid association for a singular association" do
+      Moderation.count.should eq(0)
+      task = Task.new( :title => "Task 1" )
+      task.current_subtask = Subtask.create( :title => 'Subtask 1' )
+      Subtask.count.should eq(1)
+      task.save!
+      Moderation.count.should eq(1)
+
+      moderation = Moderation.first
+      viewable_task = Task.viewable(moderation)
+      created_subtask = Subtask.first 
+      Moderation.count.should eq(1) 
+      viewable_task.current_subtask.should eq(created_subtask )
+      #ensure we haven't created anoter subtask or moderation after creating the viewable object and its association
+      Subtask.count.should eq(1) 
+      Moderation.count.should eq(1) 
+
+      viewable_task.title.should eq(task.title)
+      viewable_task.current_subtask.title.should eq(created_subtask.title)
+    end
+
+    it "by viewing a moderated version of an object it still returns valid collection associations" do
+      Moderation.count.should eq(0)
+      task = Task.new( :title => "Task 1" )
+      task.renamed_subtasks << Subtask.create( :title => 'Subtask 1' )
+      Subtask.count.should eq(1)
+      task.save!
+      Moderation.count.should eq(1)
+
+      moderation = Moderation.first
+      viewable_task = Task.viewable(moderation)
+      created_subtask = Subtask.first 
+      Moderation.count.should eq(1) 
+      viewable_task.renamed_subtasks.should include created_subtask 
+      #ensure we haven't created anoter subtask or moderation after creating the viewable object and its association
+      Subtask.count.should eq(1) 
+      Moderation.count.should eq(1) 
+
+      viewable_task.title.should eq(task.title)
+      viewable_task.renamed_subtasks.first.title.should eq(created_subtask.title)
+    end
+
+
+  end
+
   #
   # has_moderated_association
   # has_many
