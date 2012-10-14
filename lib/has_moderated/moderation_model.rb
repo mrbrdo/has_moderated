@@ -27,7 +27,7 @@ module HasModerated
     def accept_changes(record)
       if record
         HasModerated::Common::try_without_moderation(record) do
-          # don't run validations on save (were already ran when moderation was created)
+          # run validations (issue #12)
           record.save!
         end
       end

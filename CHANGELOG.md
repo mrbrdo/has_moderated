@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1
+
+* accept now returns false if validations don't pass, otherwise returns true
+* accept! added (raises exception if validations don't pass)
+
 ## v1.0.1
 
 * Fix issue #12
