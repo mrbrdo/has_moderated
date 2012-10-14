@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+* accept and accept! now accept hash parameters that will be passed on to model#save
+
 ## v1.1
 
 * accept now returns false if validations don't pass, otherwise returns true
