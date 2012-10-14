@@ -24,28 +24,26 @@ module HasModerated
       record
     end
 
-    def accept_changes(record)
+    def accept_changes(record, save_opts = Hash.new)
       if record
         HasModerated::Common::try_without_moderation(record) do
           # run validations (issue #12)
-          record.save!
+          record.save!(save_opts)
         end
       end
       record
     end
 
-    def accept!
+    def accept!(save_opts = Hash.new)
       record = apply
-      accept_changes(record)
+      accept_changes(record, save_opts)
       self.destroy
       record
     end
 
-    def accept
+    def accept(save_opts = Hash.new)
       begin
-        record = apply
-        accept_changes(record)
-        self.destroy
+        accept!(save_opts)
         true
       rescue
         false
@@ -66,7 +64,7 @@ module HasModerated
 
     def live_preview
       self.transaction do
-        accept
+        accept!(:perform_validation => false)
         yield(self.moderatable)
         raise ActiveRecord::Rollback
       end
