@@ -5,11 +5,11 @@ module HasModerated
         alias_method_chain :destroy, :moderation_callbacks
       end
     end
-    
+
     def parsed_data
       @parsed_data ||= YAML::load(data)
     end
-    
+
     def apply
       if create?
         record = HasModerated::ModeratedCreate::ApplyModeration::apply(moderatable_type.constantize, parsed_data)
@@ -23,24 +23,24 @@ module HasModerated
       end
       record
     end
-    
+
     def accept_changes(record)
       if record
         HasModerated::Common::try_without_moderation(record) do
           # don't run validations on save (were already ran when moderation was created)
-          record.save(:validate => false)
+          record.save!
         end
       end
       record
     end
-    
+
     def accept
       record = apply
       accept_changes(record)
       self.destroy
       record
     end
-    
+
     def destroy_with_moderation_callbacks
       if moderatable_type
         klass = moderatable_type.constantize
@@ -52,7 +52,7 @@ module HasModerated
     def discard
       destroy_with_moderation_callbacks
     end
-    
+
     def live_preview
       self.transaction do
         record = accept
@@ -63,10 +63,10 @@ module HasModerated
       # since we don't actually commit to database, we don't need the freeze
       # only way I found to unfreeze is to dup attributes
       @attributes = @attributes.dup
-      
+
       nil
     end
-    
+
     def preview(options = {})
       options[:saveable] ||= false
       fake_record = nil
@@ -75,15 +75,15 @@ module HasModerated
       end
       fake_record
     end
-    
+
     def create?
       parsed_data[:create].present?
     end
-    
+
     def destroy?
       parsed_data[:destroy] == true
     end
-    
+
     def update?
       !(create? || destroy?)
     end
