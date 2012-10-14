@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.1
+
+* Fix issue #12
+
 ## v1.0.rc11
 
 * Moderation#destroy now calls Moderation#discard automatically.
