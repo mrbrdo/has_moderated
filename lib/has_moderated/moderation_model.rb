@@ -34,11 +34,22 @@ module HasModerated
       record
     end
 
-    def accept
+    def accept!
       record = apply
       accept_changes(record)
       self.destroy
       record
+    end
+
+    def accept
+      begin
+        record = apply
+        accept_changes(record)
+        self.destroy
+        true
+      rescue
+        false
+      end
     end
 
     def destroy_with_moderation_callbacks
@@ -55,8 +66,8 @@ module HasModerated
 
     def live_preview
       self.transaction do
-        record = accept
-        yield(record)
+        accept
+        yield(self.moderatable)
         raise ActiveRecord::Rollback
       end
       # self.frozen? now became true

@@ -597,7 +597,8 @@ describe Task do
       Task.create! :title => "Task 1"
       Moderation.first.accept
       expect { Task.create! :title => "Task 1" }.should raise_error
-      expect { Moderation.first.accept }.should raise_error
+      Moderation.first.accept.should be_false
+      expect { Moderation.first.accept! }.should raise_error
     end
   end
 
