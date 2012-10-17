@@ -9,12 +9,12 @@ module HasModerated
 
         # save options for use later
         cattr_accessor :moderated_create_options
-        self.moderated_create_options = (options.count > 0) ? options[0] : {} 
+        self.moderated_create_options = (options.count > 0) ? options[0] : {}
 
         alias_method_chain :create_or_update, :moderation
       end
     end
-    
+
     module ApplyModeration
       def self.apply(klass, value)
         rec = nil
@@ -32,10 +32,10 @@ module HasModerated
         rec
       end
     end
-    
+
     module InstanceMethods
       def create_or_update_with_moderation *args
-        if valid? && new_record? && @moderation_disabled != true
+        if valid? && new_record? && !self.moderation_disabled
           to_moderation_created
           true
         else

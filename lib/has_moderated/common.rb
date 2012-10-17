@@ -1,15 +1,19 @@
 module HasModerated
   module Common
     def self.init(klass)
-      unless klass.class_variable_defined? "@@moderation_disabled"
+      unless klass.instance_variable_defined? "@moderated_model"
+        klass.instance_variable_set("@moderated_model", true)
         klass.class_eval do
-          attr_accessor :moderation_disabled
-          @@moderation_disabled = false
-        end  
+          attr_writer :moderation_disabled
+
+          def moderation_disabled
+            @moderation_disabled || Moderation.moderation_disabled
+          end
+        end
         HasModerated::ActiveRecordHelpers::add_moderations_association klass
       end
     end
-    
+
     def self.try_without_moderation rec
       # TODO: fix this, this method should only be avail. to moderated models
       if rec.respond_to?(:moderation_disabled)
@@ -28,7 +32,7 @@ module HasModerated
         end
       end
     end
-    
+
     module InstanceMethods
       def without_moderation(do_disable = true)
         raise "moderation already disabled - illegal nesting" if self.moderation_disabled && do_disable
@@ -36,11 +40,11 @@ module HasModerated
         yield(self)
         self.moderation_disabled = false if do_disable
       end
-      
+
       def get_moderation_attributes
         HasModerated::ActiveRecordHelpers::get_default_moderation_attributes(self)
       end
-      
+
       def create_moderation_with_hooks!(*args)
         is_create = args.first[:create].present?
         if is_create
@@ -56,7 +60,7 @@ module HasModerated
         m.save! if is_create || !self.new_record?
         m
       end
-      
+
       def add_associations_moderated assocs_data
         # convert associations data so it can be serialized
         assocs_processed = Hash.new
@@ -68,7 +72,7 @@ module HasModerated
             assocs_processed[assoc_name].push(pdata)
           end
         end
-        
+
         # create moderation for adding the associations and return it
         moderations = []
         unless assocs_processed.empty?
@@ -79,7 +83,7 @@ module HasModerated
 
         moderations
       end
-      
+
       # moderate removing associations
       def delete_associations_moderated(assocs)
         moderations = []

@@ -678,6 +678,38 @@ describe Task do
     end
   end
 
+  context "without_moderation:" do
+    before do
+      reload_models.task {
+        has_moderated :title
+      }
+    end
+
+    it "can bypass moderation for specific model" do
+      Task.create!
+      Moderation.count.should eq(0)
+      t = Task.first
+      t.title = "Task 2"
+      t.without_moderation do
+        t.save
+      end
+      Moderation.count.should eq(0)
+      Task.first.title.should eq("Task 2")
+    end
+
+    it "can bypass moderation for all models" do
+      Task.create!
+      Moderation.count.should eq(0)
+      t = Task.first
+      t.title = "Task 2"
+      Moderation.without_moderation do
+        t.save
+      end
+      Moderation.count.should eq(0)
+      Task.first.title.should eq("Task 2")
+    end
+  end
+
   context "preview:" do
     it "shows a live preview of changed attributes" do
       reload_models.task {

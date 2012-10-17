@@ -6,11 +6,11 @@ module HasModerated
         # Lazily include the instance methods so we don't clutter up
         # any more ActiveRecord models than we have to.
         send :include, InstanceMethods
-      
+
         alias_method_chain :destroy, :moderation
       end
     end
-    
+
     module ApplyModeration
       def self.apply(record, value)
         if value[:destroy] == true
@@ -21,10 +21,10 @@ module HasModerated
         end
       end
     end
-    
+
     module InstanceMethods
       def destroy_with_moderation *args
-        if @moderation_disabled == true
+        if self.moderation_disabled
           destroy_without_moderation *args
         else
           to_moderation_destroyed

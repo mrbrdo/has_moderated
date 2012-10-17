@@ -21,12 +21,9 @@ module HasModerated
           end
         end
 
-        # use an attribute to temporarily disable moderation before_save filter
-        attr_accessor :moderation_disabled
-
         # send moderated attributes to moderation before saving the model
         before_save do
-          if self.valid? && @moderation_disabled != true &&
+          if self.valid? && !self.moderation_disabled &&
             # don't save moderated attributes if create is moderated and it's a new record
             !(self.class.respond_to?("moderated_create_options") && new_record?)
             moderations = self.to_moderation
@@ -49,7 +46,7 @@ module HasModerated
         end
       end
     end
-    
+
     module ApplyModeration
       def self.apply(rec, value)
         if value[:attributes].present?
@@ -63,7 +60,7 @@ module HasModerated
         rec
       end
     end
-    
+
     module InstanceMethods
       def to_moderation
         moderations = []
@@ -78,7 +75,7 @@ module HasModerated
             self.send(att_name+"=", values[0])
           end
         end
-      
+
         moderations
       end
     end

@@ -3,6 +3,14 @@ module HasModerated
     def self.included(base)
       base.class_eval do
         alias_method_chain :destroy, :moderation_callbacks
+        cattr_accessor :moderation_disabled
+        self.moderation_disabled = false
+
+        def self.without_moderation(disable = true)
+          self.moderation_disabled = true if disable
+          yield(self)
+          self.moderation_disabled = false if disable
+        end
       end
     end
 
