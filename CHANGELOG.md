@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2
+
+* added Moderation class method without_moderation to disable moderations globally for all models
+
 ## v1.1.1
 
 * accept and accept! now accept hash parameters that will be passed on to model#save
