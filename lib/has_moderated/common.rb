@@ -35,10 +35,11 @@ module HasModerated
 
     module InstanceMethods
       def without_moderation(do_disable = true)
-        raise "moderation already disabled - illegal nesting" if self.moderation_disabled && do_disable
+        already_disabled = @moderation_disabled
         self.moderation_disabled = true if do_disable
-        yield(self)
-        self.moderation_disabled = false if do_disable
+        retval = yield(self)
+        self.moderation_disabled = false if do_disable && !already_disabled
+        retval
       end
 
       def get_moderation_attributes

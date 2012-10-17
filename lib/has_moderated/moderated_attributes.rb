@@ -50,7 +50,7 @@ module HasModerated
     module ApplyModeration
       def self.apply(rec, value)
         if value[:attributes].present?
-          rec.without_moderation do
+          Moderation.without_moderation do
             value[:attributes].each_pair do |attr_name, attr_value|
               # bypass attr_accessible protection
               rec.send(attr_name.to_s+"=", attr_value)

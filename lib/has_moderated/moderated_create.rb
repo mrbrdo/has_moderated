@@ -26,7 +26,7 @@ module HasModerated
           attrs && attrs.each_pair do |key, val|
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
-          rec.without_moderation { rec.save(:validate => false) }
+          Moderation.without_moderation { rec.save(:validate => false) }
           HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create])
         end
         rec

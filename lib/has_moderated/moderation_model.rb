@@ -6,10 +6,11 @@ module HasModerated
         cattr_accessor :moderation_disabled
         self.moderation_disabled = false
 
-        def self.without_moderation(disable = true)
-          self.moderation_disabled = true if disable
-          yield(self)
-          self.moderation_disabled = false if disable
+        def self.without_moderation(do_disable = true)
+          self.moderation_disabled = true if do_disable
+          retval = yield(self)
+          self.moderation_disabled = false if do_disable
+          retval
         end
       end
     end

@@ -14,7 +14,7 @@ module HasModerated
     module ApplyModeration
       def self.apply(record, value)
         if value[:destroy] == true
-          record.without_moderation { |m| m.destroy }
+          Moderation.without_moderation { record.destroy }
           nil
         else
           record
