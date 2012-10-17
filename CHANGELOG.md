@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3
+
+* more consistent behavior of without_moderation
+
 ## v1.1.2
 
 * added Moderation class method without_moderation to disable moderations globally for all models
