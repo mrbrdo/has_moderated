@@ -707,6 +707,7 @@ describe Task do
       end
       Moderation.count.should eq(0)
       Task.first.title.should eq("Task 2")
+      Moderation.moderation_disabled.should be_false
       t.title = "Task 3"
       t.save
       Moderation.count.should eq(1)

@@ -7,9 +7,13 @@ module HasModerated
         self.moderation_disabled = false
 
         def self.without_moderation(do_disable = true)
+          already_disabled = self.moderation_disabled
           self.moderation_disabled = true if do_disable
-          retval = yield(self)
-          self.moderation_disabled = false if do_disable
+          begin
+            retval = yield(self)
+          ensure
+            self.moderation_disabled = false if do_disable && !already_disabled
+          end
           retval
         end
       end
@@ -35,7 +39,7 @@ module HasModerated
 
     def accept_changes(record, save_opts = Hash.new)
       if record
-        HasModerated::Common::try_without_moderation(record) do
+        Moderation.without_moderation do
           # run validations (issue #12)
           record.save!(save_opts)
         end

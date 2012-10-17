@@ -37,8 +37,11 @@ module HasModerated
       def without_moderation(do_disable = true)
         already_disabled = @moderation_disabled
         self.moderation_disabled = true if do_disable
-        retval = yield(self)
-        self.moderation_disabled = false if do_disable && !already_disabled
+        begin
+          retval = yield(self)
+        ensure
+          self.moderation_disabled = false if do_disable && !already_disabled
+        end
         retval
       end
 
