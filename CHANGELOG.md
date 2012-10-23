@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.4
+
+* fix issue #13 (create moderation preview bug, regression from v1.1.1 upwards)
+* fix bug that happened when you create a new column with a moderated attribute assigned
+* not using attr_accessible anywhere anymore in preparation for Rails 4
+
 ## v1.1.3
 
 * more consistent behavior of without_moderation
