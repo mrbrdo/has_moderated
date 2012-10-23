@@ -53,7 +53,6 @@ module HasModerated
         if value[:attributes].present?
           Moderation.without_moderation do
             value[:attributes].each_pair do |attr_name, attr_value|
-              # bypass attr_accessible protection
               rec.send(attr_name.to_s+"=", attr_value)
             end
           end

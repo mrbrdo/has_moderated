@@ -22,7 +22,6 @@ module HasModerated
           # create the main record
           rec = klass.new
           attrs = value[:create][:attributes]
-          # bypass attr_accessible protection
           attrs && attrs.each_pair do |key, val|
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
