@@ -820,13 +820,11 @@ describe Task do
 
     it "shows a saved preview of has_many :through association" do
       reload_models.task {
-        attr_accessible :title, :desc
         has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m1_id"
         has_many :renamed_subtasks, :class_name => subtask_class_name, :through => :renamed_connections, :source => :renamed_subtask
         has_moderated_association :renamed_subtasks
         has_moderated_association :renamed_connections
       }.subtask {
-        attr_accessible :title, :desc
         belongs_to :task
         has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m2_id"
         has_many :renamed_tasks, :class_name => task_class_name, :through => :renamed_connections, :source => :renamed_task
