@@ -733,6 +733,16 @@ describe Task do
       Task.last.title.should be_blank
     end
 
+    it "returns a preview for create moderations (issue #13)" do
+      reload_models.task {
+        has_moderated_create
+      }
+
+      Task.create! :title => "Task 1"
+      Moderation.last.preview.should_not be_nil
+      Moderation.last.preview.title.should eq("Task 1")
+    end
+
     it "shows a saved preview of changed attributes" do
       reload_models.task {
         has_moderated :title

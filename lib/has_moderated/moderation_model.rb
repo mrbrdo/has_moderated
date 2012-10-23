@@ -77,8 +77,8 @@ module HasModerated
 
     def live_preview
       self.transaction do
-        accept!(:perform_validation => false)
-        yield(self.moderatable)
+        record = accept!(:perform_validation => false)
+        yield(record)
         raise ActiveRecord::Rollback
       end
       # self.frozen? now became true
