@@ -39,7 +39,8 @@ module HasModerated
         after_create do
           if !self.id.blank? && !@pending_moderations.blank?
             @pending_moderations.each do |m|
-              m.update_attributes(:moderatable_id => self.id)
+              m.moderatable_id = self.id
+              m.save
             end
             @pending_moderations.clear
           end
