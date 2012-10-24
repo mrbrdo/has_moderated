@@ -23,14 +23,14 @@ module HasModerated
       @parsed_data ||= YAML::load(data)
     end
 
-    def apply
+    def apply(preview_mode = false)
       if create?
-        record = HasModerated::ModeratedCreate::ApplyModeration::apply(moderatable_type.constantize, parsed_data)
+        record = HasModerated::ModeratedCreate::ApplyModeration::apply(moderatable_type.constantize, parsed_data, preview_mode)
       else
         record = moderatable
         if record
-          record = HasModerated::ModeratedAttributes::ApplyModeration::apply(record, parsed_data)
-          record = HasModerated::Associations::Base::ApplyModeration::apply(record, parsed_data)
+          record = HasModerated::ModeratedAttributes::ApplyModeration::apply(record, parsed_data, preview_mode)
+          record = HasModerated::Associations::Base::ApplyModeration::apply(record, parsed_data, preview_mode)
           record = HasModerated::ModeratedDestroy::ApplyModeration::apply(record, parsed_data)
         end
       end
@@ -47,26 +47,27 @@ module HasModerated
       record
     end
 
-    def accept!(save_opts = Hash.new)
-      record = apply
+    def accept!(save_opts = Hash.new, preview_mode = false)
+      record = apply(preview_mode)
       accept_changes(record, save_opts)
-      self.destroy
+      self.destroy(:preview_mode => preview_mode)
       record
     end
 
-    def accept(save_opts = Hash.new)
+    def accept(save_opts = Hash.new, preview_mode = false)
       begin
-        accept!(save_opts)
+        accept!(save_opts, preview_mode)
         true
       rescue
         false
       end
     end
 
-    def destroy_with_moderation_callbacks
+    def destroy_with_moderation_callbacks(*args)
+      options = args.first || Hash.new
       if moderatable_type
         klass = moderatable_type.constantize
-        klass.moderatable_discard(self) if klass.respond_to?(:moderatable_discard)
+        klass.moderatable_discard(self, options) if klass.respond_to?(:moderatable_discard)
       end
       destroy_without_moderation_callbacks
     end
@@ -76,8 +77,14 @@ module HasModerated
     end
 
     def live_preview
+      # absolutely no point to preview a destroy moderation
+      if destroy? && parsed_data.keys.count == 1
+        yield(nil)
+        return nil
+      end
+
       self.transaction do
-        record = accept!(:perform_validation => false)
+        record = accept!({ :perform_validation => false }, true)
         yield(record)
         raise ActiveRecord::Rollback
       end

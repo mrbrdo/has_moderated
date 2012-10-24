@@ -49,8 +49,9 @@ module HasModerated
     end
 
     module ApplyModeration
-      def self.apply(rec, value)
+      def self.apply(rec, value, preview_mode = false)
         if value[:attributes].present?
+          rec.instance_variable_set(:@has_moderated_preview, true) if preview_mode
           Moderation.without_moderation do
             value[:attributes].each_pair do |attr_name, attr_value|
               rec.send(attr_name.to_s+"=", attr_value)

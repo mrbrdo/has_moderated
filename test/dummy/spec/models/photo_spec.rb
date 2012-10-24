@@ -11,7 +11,7 @@ describe Photo do
     FileUtils.rm_rf(TEMPDIR) # remove temp dir
     FileUtils.rm_rf(File.expand_path("../../../public/uploads", __FILE__)) # remove uploads dir
   end
-  
+
   context "create moderated:" do
     before do
       reload_models.photo {
@@ -21,7 +21,7 @@ describe Photo do
         has_moderated_carrierwave_field :avatar
       }
     end
-    
+
     it "should upload photo" do
       photo = Photo.create!(:avatar => carrierwave_test_photo)
 
@@ -36,6 +36,17 @@ describe Photo do
       photo = Photo.first
       assert_photo_uploaded(photo.avatar)
     end
+
+    it "should not move temp file when doing preview" do
+      photo = Photo.create!(:avatar => carrierwave_test_photo)
+
+      Photo.count.should eq(0)
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      Moderation.last.preview
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
   end
 
   context "not moderated:" do
@@ -44,7 +55,7 @@ describe Photo do
         mount_uploader :avatar, GenericUploader
       }
     end
-    
+
     it "should upload photo" do
       photo = Photo.create!(:avatar => carrierwave_test_photo)
 
@@ -56,7 +67,7 @@ describe Photo do
       assert_photo_uploaded(photo.avatar)
     end
   end
-  
+
   context "update moderated:" do
     before do
       reload_models.photo {
@@ -70,11 +81,11 @@ describe Photo do
     it "should moderate photo (on create)" do
       photo = Photo.create! :avatar => carrierwave_test_photo
       Photo.count.should eq(1)
-      
+
       Photo.first.avatar.file.should be_nil
       tmpEmpty?.should be_false
       uploadEmpty?.should be_true
-      
+
       Moderation.last.accept
       tmpEmpty?.should be_true
       uploadEmpty?.should be_false
@@ -83,11 +94,11 @@ describe Photo do
       photo = Photo.first
       assert_photo_uploaded(photo.avatar)
     end
-    
+
     it "should moderate photo (on update)" do
       photo = Photo.create!
       Photo.count.should eq(1)
-      
+
       Photo.first.update_attributes :avatar => carrierwave_test_photo
       tmpEmpty?.should be_false
       uploadEmpty?.should be_true
@@ -99,7 +110,7 @@ describe Photo do
       photo = Photo.first
       assert_photo_uploaded(photo.avatar)
     end
-    
+
     it "should delete temporary files if moderation is discarded" do
       photo = Photo.create! :avatar => carrierwave_test_photo
       tmpEmpty?.should be_false
@@ -108,8 +119,17 @@ describe Photo do
       tmpEmpty?.should be_true
       uploadEmpty?.should be_true
     end
+
+    it "should not move temp file when doing preview" do
+      photo = Photo.create! :avatar => carrierwave_test_photo
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      Moderation.last.preview
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
   end
-  
+
   context "moderated as association to has_moderated_create:" do
     before do
       reload_models.task {
@@ -124,9 +144,9 @@ describe Photo do
         has_moderated_carrierwave_field :avatar
         belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
       }
-      
+
     end
-    
+
     it "should upload photo" do
       task = Task.new :title => "Task 1"
       task.photos.build :avatar => carrierwave_test_photo
@@ -144,12 +164,12 @@ describe Photo do
       photo = Task.first.photos.first
       assert_photo_uploaded(photo.avatar)
     end
-    
+
     it "should not add any photos if none were added" do
       task = Task.new :title => "Task 1"
       task.renamed_subtasks.build :title => "Subtask 1"
       task.save
-      
+
       Moderation.last.parsed_data[:create][:associations][:photos].should be_nil
 
       Task.count.should eq(0)
@@ -158,6 +178,18 @@ describe Photo do
 
       Task.first.photos.count.should eq(0)
       Photo.count.should eq(0)
+    end
+
+    it "should not move temp file when doing preview" do
+      task = Task.new :title => "Task 1"
+      task.photos.build :avatar => carrierwave_test_photo
+      task.save
+
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      Moderation.last.preview
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
     end
   end
 end

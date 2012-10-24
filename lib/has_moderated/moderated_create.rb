@@ -16,17 +16,18 @@ module HasModerated
     end
 
     module ApplyModeration
-      def self.apply(klass, value)
+      def self.apply(klass, value, preview_mode = false)
         rec = nil
         if value[:create].present?
           # create the main record
           rec = klass.new
+          rec.instance_variable_set(:@has_moderated_preview, true) if preview_mode
           attrs = value[:create][:attributes]
           attrs && attrs.each_pair do |key, val|
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
           Moderation.without_moderation { rec.save(:validate => false) }
-          HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create])
+          HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create], preview_mode)
         end
         rec
       end

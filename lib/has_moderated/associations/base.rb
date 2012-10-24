@@ -70,6 +70,7 @@ module HasModerated
         end
 
         def self.apply_add_association(to, reflection, attrs)
+          preview_mode = to.instance_variable_get(:@has_moderated_preview)
           klass = reflection.class_name.constantize
           fk = HasModerated::ActiveRecordHelpers::foreign_key(reflection)
 
@@ -86,10 +87,12 @@ module HasModerated
             # PARAM = ID
             if attrs.class == Fixnum
               arec = klass.find_by_id(attrs)
+              arec.instance_variable_set(:@has_moderated_preview, preview_mode)
               add_assoc_to_record(rec, arec, reflection)
             # PARAM = Hash (create)
             elsif attrs.kind_of? Hash
               arec = klass.new
+              arec.instance_variable_set(:@has_moderated_preview, preview_mode)
               # set foreign key first, may be required sometimes
               add_assoc_to_record(rec, arec, reflection)
               attrs.each_pair do |key, val|
@@ -97,7 +100,7 @@ module HasModerated
                 arec.send(key.to_s+"=", val)
               end
               # recursive, used for has_many :through
-              apply(arec, attrs) if attrs[:associations].present?
+              apply(arec, attrs, preview_mode) if attrs[:associations].present?
             else
               raise "don't know how to parse #{attrs.class}"
             end
@@ -108,6 +111,7 @@ module HasModerated
               end
               if reflection.collection?
                 rec = rec.reload
+                rec.instance_variable_set(:@has_moderated_preview, true) if preview_mode
                 #rec.send(reflection.name.to_s) << arec unless rec.send(reflection.name.to_s).include?(arec)
               else
                 rec.send(reflection.name.to_s + "=", arec)
@@ -130,7 +134,8 @@ module HasModerated
         end
 
         # add/delete associations to a record
-        def self.apply(record, data)
+        def self.apply(record, data, preview_mode = false)
+          record.instance_variable_set(:@has_moderated_preview, true) if preview_mode
           associations = data[:associations]
           delete_associations = data[:delete_associations]
 

@@ -1,11 +1,11 @@
 require 'fileutils'
 module HasModerated
   module CarrierWave
-    
+
     def self.included(base)
       base.send :extend, ClassMethods
-    end  
-    
+    end
+
     def self.photo_tmp_delete(value)
       begin
         dirname = File.expand_path("..", value)
@@ -28,21 +28,23 @@ module HasModerated
       def has_moderated_carrierwave_field field_names
         base = self
         base.send :include, InstanceMethods
-        
+
         cattr_accessor :moderated_carrierwave_fields
-        
+
         field_names = [field_names] unless field_names.kind_of? Array
-        
+
         field_names.each do |field_name|
           field_name = field_name.to_s
           self.moderated_carrierwave_fields ||= []
           self.moderated_carrierwave_fields.push(field_name)
-        
+
           base.send :define_method, "#{field_name}_tmp_file=" do |value|
-            self.send("#{field_name}=", File.open(value))
-            HasModerated::CarrierWave::photo_tmp_delete(value)
+            if @has_moderated_preview != true
+              self.send("#{field_name}=", File.open(value))
+              HasModerated::CarrierWave::photo_tmp_delete(value)
+            end
           end
-        
+
           base.send :define_method, "store_#{field_name}_with_moderation!" do
             is_moderated = self.class.respond_to?(:moderated_attributes) &&
               self.class.moderated_attributes.include?(field_name)
@@ -56,7 +58,7 @@ module HasModerated
               })
             end
           end
-        
+
           base.send :define_method, "write_#{field_name}_identifier_with_moderation" do
             is_moderated = self.class.respond_to?(:moderated_attributes) &&
               self.class.moderated_attributes.include?(field_name)
@@ -64,18 +66,19 @@ module HasModerated
               self.send("write_#{field_name}_identifier_without_moderation")
             end
           end
-        
+
           base.alias_method_chain :get_moderation_attributes, :carrierwave unless base.instance_methods.include?("get_moderation_attributes_without_carrierwave")
           base.alias_method_chain "store_#{field_name}!", :moderation
           base.alias_method_chain "write_#{field_name}_identifier", :moderation
         end
       end
-      
+
       # use class method because we only operate on hash parameters, not with a real record
       # here we can delete the photo from tmp
-      def moderatable_discard(moderation)
+      def moderatable_discard(moderation, options)
+        return if options[:preview_mode]
         value = moderation.parsed_data
-        
+
         moderated_carrierwave_fields.each do |field_name|
           if value.kind_of? Hash
             if value.has_key?(:create) && value[:create].has_key?(:attributes)
@@ -93,7 +96,7 @@ module HasModerated
         end
       end
     end
-    
+
     module InstanceMethods
       def get_moderation_attributes_with_carrierwave
         attrs = get_moderation_attributes_without_carrierwave
