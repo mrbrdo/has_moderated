@@ -23,14 +23,14 @@ module HasModerated
       @parsed_data ||= YAML::load(data)
     end
 
-    def apply(preview_mode = false)
+    def apply(save_opts = Hash.new, preview_mode = false)
       if create?
-        record = HasModerated::ModeratedCreate::ApplyModeration::apply(moderatable_type.constantize, parsed_data, preview_mode)
+        record = HasModerated::ModeratedCreate::ApplyModeration::apply(moderatable_type.constantize, parsed_data, save_opts, preview_mode)
       else
         record = moderatable
         if record
           record = HasModerated::ModeratedAttributes::ApplyModeration::apply(record, parsed_data, preview_mode)
-          record = HasModerated::Associations::Base::ApplyModeration::apply(record, parsed_data, preview_mode)
+          record = HasModerated::Associations::Base::ApplyModeration::apply(record, parsed_data, save_opts, preview_mode)
           record = HasModerated::ModeratedDestroy::ApplyModeration::apply(record, parsed_data)
         end
       end
@@ -48,7 +48,7 @@ module HasModerated
     end
 
     def accept!(save_opts = Hash.new, preview_mode = false)
-      record = apply(preview_mode)
+      record = apply(save_opts, preview_mode)
       accept_changes(record, save_opts)
       self.destroy(:preview_mode => preview_mode)
       record

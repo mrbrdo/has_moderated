@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.6
+
+* better handling of save options like :perform_validation for associations and create moderations
+
 ## v1.1.5
 
 * fix bug where #preview would remove carrierwave temporary files

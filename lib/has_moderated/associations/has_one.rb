@@ -16,7 +16,7 @@ module HasModerated
           end
         end
       end
-      
+
       module ClassMethods
         protected
           def has_moderated_has_one_association(reflection)
@@ -41,13 +41,13 @@ module HasModerated
             end
           end
       end
-      
+
       module AssociationHelpers
         def self.add_assoc_to_record(*args)
           # same as HasMany
           HasModerated::Associations::Collection::AssociationHelpers::add_assoc_to_record(*args)
         end
-      
+
         def self.delete_assoc_from_record(from, assoc_id, reflection)
           from.send("#{reflection.name}=", nil)
           from.save # TODO necessary?

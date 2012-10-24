@@ -69,7 +69,7 @@ module HasModerated
           end
         end
 
-        def self.apply_add_association(to, reflection, attrs)
+        def self.apply_add_association(to, reflection, attrs, save_opts = Hash.new)
           preview_mode = to.instance_variable_get(:@has_moderated_preview)
           klass = reflection.class_name.constantize
           fk = HasModerated::ActiveRecordHelpers::foreign_key(reflection)
@@ -100,14 +100,13 @@ module HasModerated
                 arec.send(key.to_s+"=", val)
               end
               # recursive, used for has_many :through
-              apply(arec, attrs, preview_mode) if attrs[:associations].present?
+              apply(arec, attrs, save_opts, preview_mode) if attrs[:associations].present?
             else
               raise "don't know how to parse #{attrs.class}"
             end
             if arec
               try_without_moderation(arec) do
-                arec.save(:validate => false) # don't run validations
-                # TODO: validations? sup?
+                arec.save(save_opts)
               end
               if reflection.collection?
                 rec = rec.reload
@@ -134,7 +133,7 @@ module HasModerated
         end
 
         # add/delete associations to a record
-        def self.apply(record, data, preview_mode = false)
+        def self.apply(record, data, save_opts = Hash.new, preview_mode = false)
           record.instance_variable_set(:@has_moderated_preview, true) if preview_mode
           associations = data[:associations]
           delete_associations = data[:delete_associations]
@@ -143,7 +142,7 @@ module HasModerated
             reflection = record.class.reflections[assoc_name.to_sym]
 
             assoc_records.each do |attrs|
-              apply_add_association(record, reflection, attrs) if attrs.present?
+              apply_add_association(record, reflection, attrs, save_opts) if attrs.present?
             end
           end
 

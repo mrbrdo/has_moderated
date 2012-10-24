@@ -16,7 +16,7 @@ module HasModerated
     end
 
     module ApplyModeration
-      def self.apply(klass, value, preview_mode = false)
+      def self.apply(klass, value, save_opts = Hash.new, preview_mode = false)
         rec = nil
         if value[:create].present?
           # create the main record
@@ -26,8 +26,8 @@ module HasModerated
           attrs && attrs.each_pair do |key, val|
             rec.send(key.to_s+"=", val) unless key.to_s == 'id'
           end
-          Moderation.without_moderation { rec.save(:validate => false) }
-          HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create], preview_mode)
+          Moderation.without_moderation { rec.save(save_opts) }
+          HasModerated::Associations::Base::ApplyModeration::apply(rec, value[:create], save_opts, preview_mode)
         end
         rec
       end
