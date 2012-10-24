@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.5
+
+* fix bug where #preview would remove carrierwave temporary files
+* fix #preview for carrierwave uploads, now gives a frozen uploader pointing to the temporary file
+
 ## v1.1.4
 
 * fix issue #13 (create moderation preview bug, regression from v1.1.1 upwards)
