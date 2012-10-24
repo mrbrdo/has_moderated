@@ -38,10 +38,31 @@ module HasModerated
           self.moderated_carrierwave_fields ||= []
           self.moderated_carrierwave_fields.push(field_name)
 
-          base.send :define_method, "#{field_name}_tmp_file=" do |value|
+          base.send :define_method, "#{field_name}_tmp_file=" do |tmp_filename|
             if @has_moderated_preview != true
-              self.send("#{field_name}=", File.open(value))
-              HasModerated::CarrierWave::photo_tmp_delete(value)
+              self.send("#{field_name}=", File.open(tmp_filename))
+              HasModerated::CarrierWave::photo_tmp_delete(tmp_filename)
+            elsif tmp_filename.present?
+              # preview
+              self.singleton_class.class_eval do
+                define_method :"#{field_name}_with_preview" do |*args, &block|
+                  uploader = send(:"#{field_name}_without_preview", *args, &block)
+                  unless uploader.frozen?
+                    uploader.instance_variable_set(:@file,
+                      ::CarrierWave::SanitizedFile.new(
+                        File.open(tmp_filename, "rb")))
+                    uploader.freeze
+                  end
+                  uploader
+                end
+                define_method :"#{field_name}?" do
+                  true
+                end
+                define_method :"#{field_name}_url" do
+                  send("#{field_name}").url
+                end
+                alias_method_chain :"#{field_name}", :preview
+              end
             end
           end
 
@@ -62,7 +83,8 @@ module HasModerated
           base.send :define_method, "write_#{field_name}_identifier_with_moderation" do
             is_moderated = self.class.respond_to?(:moderated_attributes) &&
               self.class.moderated_attributes.include?(field_name)
-            if !is_moderated || self.moderation_disabled || !self.send("#{field_name}_changed?")
+            if !@has_moderated_preview &&
+              (!is_moderated || self.moderation_disabled || !self.send("#{field_name}_changed?"))
               self.send("write_#{field_name}_identifier_without_moderation")
             end
           end

@@ -192,4 +192,28 @@ describe Photo do
       uploadEmpty?.should be_true
     end
   end
+
+  context "moderation preview" do
+    it "should show the temporary file as the photo" do
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        has_moderated :avatar
+      }
+
+      photo_file = carrierwave_test_photo
+      photo = Photo.create! :avatar => photo_file
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      preview = Moderation.last.preview
+      preview.avatar.url.should match(/\A\/uploads\/tmp\/.+\/test.jpg\z/)
+      preview.avatar.current_path.should eq(Moderation.last.parsed_data[:attributes]["avatar_tmp_file"])
+      preview.avatar_url.should eq(preview.avatar.url)
+      preview.avatar.frozen?.should be_true
+
+      Photo.last.avatar.current_path.should be_blank
+      Photo.last.avatar_url.should be_blank
+    end
+  end
 end

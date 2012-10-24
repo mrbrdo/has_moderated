@@ -5,4 +5,4 @@ test/dummy/db/*.sqlite3
 test/dummy/log/*.log
 test/dummy/tmp/
 .rbx/
-test/dummy/public/uploads/tmp/
+test/dummy/public/uploads/
