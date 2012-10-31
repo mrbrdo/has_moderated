@@ -35,6 +35,7 @@ describe Photo do
       Photo.count.should eq(1)
       photo = Photo.first
       assert_photo_uploaded(photo.avatar)
+      File.exist?(photo.avatar.versions[:thumb].file.file).should be_true
     end
 
     it "should not move temp file when doing preview" do
