@@ -238,6 +238,44 @@ describe Photo do
       uploadEmpty?.should be_true
     end
 
+    it "should not move image to uploads when calling save on live_preview" do
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_create
+        has_moderated_carrierwave_field :avatar
+      }
+
+      photo_file = carrierwave_test_photo
+      photo = Photo.create! :avatar => photo_file
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      Moderation.last.live_preview do |m|
+        m.save
+        uploadEmpty?.should be_true
+      end
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
+
+    it "should not move image to uploads when calling save on preview" do
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_create
+        has_moderated_carrierwave_field :avatar
+      }
+
+      photo_file = carrierwave_test_photo
+      photo = Photo.create! :avatar => photo_file
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      m = Moderation.last.preview
+      m.save
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
+
     it "should show the temporary file as the photo (create assoc moderation)" do
       reload_models.task {
         has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
