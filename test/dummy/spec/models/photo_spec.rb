@@ -210,10 +210,83 @@ describe Photo do
       preview.avatar.url.should match(/\A\/uploads\/tmp\/.+\/test.jpg\z/)
       preview.avatar.current_path.should eq(Moderation.last.parsed_data[:attributes]["avatar_tmp_file"])
       preview.avatar_url.should eq(preview.avatar.url)
-      preview.avatar.frozen?.should be_true
+      preview.avatar.file.class.should eq(::CarrierWave::HasModeratedTempFile)
 
       Photo.last.avatar.current_path.should be_blank
       Photo.last.avatar_url.should be_blank
+    end
+
+    it "should show the temporary file as the photo (create moderation)" do
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_create
+        has_moderated_carrierwave_field :avatar
+      }
+
+      photo_file = carrierwave_test_photo
+      photo = Photo.create! :avatar => photo_file
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      preview = Moderation.last.preview
+      preview.avatar.url.should match(/\A\/uploads\/tmp\/.+\/test.jpg\z/)
+      preview.avatar.current_path.should eq(Moderation.last.parsed_data[:create][:attributes]["avatar_tmp_file"])
+      preview.avatar_url.should eq(preview.avatar.url)
+      preview.avatar.file.class.should eq(::CarrierWave::HasModeratedTempFile)
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
+
+    it "should show the temporary file as the photo (create assoc moderation)" do
+      reload_models.task {
+        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+        has_moderated_create :with_associations => [:photos]
+      }.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+      }
+
+      photo_file = carrierwave_test_photo
+      task = Task.new
+      photo = task.photos.build :avatar => photo_file
+      task.save
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      preview = Moderation.last.preview.photos.first
+      preview.avatar.url.should match(/\A\/uploads\/tmp\/.+\/test.jpg\z/)
+      preview.avatar.current_path.should eq(Moderation.last.parsed_data[:create][:associations][:photos].first["avatar_tmp_file"])
+      preview.avatar_url.should eq(preview.avatar.url)
+      preview.avatar.file.class.should eq(::CarrierWave::HasModeratedTempFile)
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+    end
+
+    it "should show the temporary file as the photo (assoc moderation)" do
+      reload_models.task {
+        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+        has_moderated_association :photos
+      }.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+      }
+
+      photo_file = carrierwave_test_photo
+      task = Task.new
+      photo = task.photos.build :avatar => photo_file
+      task.save
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      preview = Moderation.last.preview.photos.first
+      preview.avatar.url.should match(/\A\/uploads\/tmp\/.+\/test.jpg\z/)
+      preview.avatar.current_path.should eq(Moderation.last.parsed_data[:associations][:photos].first["avatar_tmp_file"])
+      preview.avatar_url.should eq(preview.avatar.url)
+      preview.avatar.file.class.should eq(::CarrierWave::HasModeratedTempFile)
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
     end
   end
 end

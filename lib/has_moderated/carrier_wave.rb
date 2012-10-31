@@ -1,4 +1,40 @@
 require 'fileutils'
+require 'carrierwave'
+module ::CarrierWave
+  class HasModeratedTempFile < SanitizedFile
+    def initialize(file)
+      super(file)
+    end
+
+    def move_to(*args)
+      self
+    end
+
+    def copy_to(*args)
+      self
+    end
+
+    def delete(*args)
+      false
+    end
+  end
+
+  module Storage
+    class File
+      def retrieve_with_moderation_preview!(identifier)
+        tmp_path = Pathname.new(Rails.public_path).join(@uploader.class.store_dir).join("tmp").to_s
+
+        if identifier.try(:start_with?, tmp_path)
+          ::CarrierWave::HasModeratedTempFile.new(identifier)
+        else
+          retrieve_without_moderation_preview!(identifier)
+        end
+      end
+      alias_method_chain :retrieve!, :moderation_preview
+    end
+  end
+end
+
 module HasModerated
   module CarrierWave
 
@@ -38,34 +74,18 @@ module HasModerated
           self.moderated_carrierwave_fields ||= []
           self.moderated_carrierwave_fields.push(field_name)
 
-          base.send :define_method, "#{field_name}_tmp_file=" do |tmp_filename|
-            if @has_moderated_preview != true
-              self.send("#{field_name}=", File.open(tmp_filename))
-              HasModerated::CarrierWave::photo_tmp_delete(tmp_filename)
-            elsif tmp_filename.present?
-              # preview
-              self.singleton_class.class_eval do
-                define_method :"#{field_name}_with_preview" do |*args, &block|
-                  uploader = send(:"#{field_name}_without_preview", *args, &block)
-                  unless uploader.frozen?
-                    uploader.instance_variable_set(:@file,
-                      ::CarrierWave::SanitizedFile.new(
-                        File.open(tmp_filename, "rb")))
-                    uploader.freeze
-                  end
-                  uploader
-                end
-                define_method :"#{field_name}?" do
-                  true
-                end
-                define_method :"#{field_name}_url" do
-                  send("#{field_name}").url
-                end
-                alias_method_chain :"#{field_name}", :preview
+          base.send :define_method, :"#{field_name}_tmp_file=" do |tmp_filename|
+            if tmp_filename.is_a? String
+              if @has_moderated_preview
+                write_attribute field_name.to_s, tmp_filename
+              else
+                tmp_filename =~ /\/([^\/]+\/[^\/]+)\z/
+                send(field_name).retrieve_from_cache!($1)
               end
+            else
+              send(:"#{field_name}=", tmp_filename)
             end
           end
-
           base.send :define_method, "store_#{field_name}_with_moderation!" do
             is_moderated = self.class.respond_to?(:moderated_attributes) &&
               self.class.moderated_attributes.include?(field_name)
