@@ -3,6 +3,7 @@
 ## v1.1.6
 
 * better handling of save options like :perform_validation for associations and create moderations
+* better handling of carrierwave fields, especially when previewing
 
 ## v1.1.5
 
