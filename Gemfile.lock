@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    has_moderated (1.1.6)
+    has_moderated (1.2)
       rails (>= 3.0.0)
 
 GEM
@@ -125,10 +125,10 @@ GEM
     sqlite3 (1.3.6)
     thor (0.15.2)
     tilt (1.3.3)
-    treetop (1.4.11)
+    treetop (1.4.12)
       polyglot
       polyglot (>= 0.3.1)
-    tzinfo (0.3.33)
+    tzinfo (0.3.34)
 
 PLATFORMS
   ruby

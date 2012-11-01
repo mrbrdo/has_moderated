@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2
+
+* better (lazy) loading of carrierwave
+
 ## v1.1.6
 
 * better handling of save options like :perform_validation for associations and create moderations
