@@ -6,7 +6,7 @@ module HasModerated
     def self.included(base)
       # lazy require so it doesn't require carrierwave until
       # it's actually used by the user
-      require_relative './carrier_wave_patches'
+      require File.expand_path('../carrier_wave_patches', __FILE__)
       base.send :extend, ClassMethods
     end
 

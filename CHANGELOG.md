@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.1
+
+* fix regression for ruby 1.8.x
+
 ## v1.2
 
 * better (lazy) loading of carrierwave
