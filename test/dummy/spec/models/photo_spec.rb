@@ -327,5 +327,21 @@ describe Photo do
       tmpEmpty?.should be_false
       uploadEmpty?.should be_true
     end
+
+    it "should display preview of photo versions correctly" do
+      reload_models.photo {
+        mount_uploader :avatar, GenericUploader
+        send :include, HasModerated::CarrierWave
+        has_moderated_carrierwave_field :avatar
+        has_moderated :avatar
+      }
+
+      photo_file = carrierwave_test_photo
+      photo = Photo.create! :avatar => photo_file
+      tmpEmpty?.should be_false
+      uploadEmpty?.should be_true
+      preview = Moderation.last.preview
+      preview.avatar.url(:thumb).should match(/\A\/uploads\/tmp\/.+\/thumb_test.jpg\z/)
+    end
   end
 end
