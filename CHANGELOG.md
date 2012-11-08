@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.2
+
+* fix preview for carrierwave when using versions (will now preview versions correctly)
+
 ## v1.2.1
 
 * fix regression for ruby 1.8.x
