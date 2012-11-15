@@ -100,7 +100,10 @@ module HasModerated
                 arec.send(key.to_s+"=", val)
               end
               # recursive, used for has_many :through
-              apply(arec, attrs, save_opts, preview_mode) if attrs[:associations].present?
+              if attrs[:associations].present?
+                arec.save(save_opts)
+                apply(arec, attrs, save_opts, preview_mode)
+              end
             else
               raise "don't know how to parse #{attrs.class}"
             end

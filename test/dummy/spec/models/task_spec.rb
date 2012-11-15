@@ -883,4 +883,37 @@ describe Task do
       conn.renamed_subtask.frozen?.should be_true
     end
   end
+
+  it "can handle nested associations" do
+    reload_models.task {
+      has_many :subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+      has_moderated_create :with_associations => [:subtasks]
+    }.subtask {
+      belongs_to :task, :class_name => task_class_name
+      has_many :photos, :as => :parentable, :class_name => photo_class_name
+    }.photo {
+      belongs_to :parentable, :polymorphic => true
+    }
+
+    data = {
+      :create => {
+        :attributes => { "title" => "Task" },
+        :associations => {
+          :subtasks => 
+            [
+              {"title" => "Subtask",
+                :associations => {
+                  :photos => [{"title" => "Photo"}]
+                }
+              }
+            ]
+        }
+      }
+    }
+    Moderation.create! :moderatable_type => "Task", :data => data.to_yaml
+    Moderation.last.accept
+    (t = Task.last).title.should eq("Task")
+    (s = t.subtasks.last).title.should eq("Subtask")
+    s.photos.last.title.should eq("Photo")
+  end
 end
