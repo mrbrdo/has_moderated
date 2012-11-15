@@ -25,7 +25,7 @@ Bundler::GemHelper.install_tasks
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = %w(--color)
-  spec.pattern = 'test/dummy/spec{,/*/**}/*_spec.rb'
+  spec.pattern = 'spec{,/*/**}/*_spec.rb'
 end
 
 task :prepare_test_env do
