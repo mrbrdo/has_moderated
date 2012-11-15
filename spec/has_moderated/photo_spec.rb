@@ -1,4 +1,4 @@
-require File.expand_path('../../spec_helper', __FILE__)
+require 'spec_helper'
 
 def reload_models
   crazy_models.reset
@@ -9,7 +9,7 @@ end
 describe Photo do
   before(:each) do
     FileUtils.rm_rf(TEMPDIR) # remove temp dir
-    FileUtils.rm_rf(File.expand_path("../../../public/uploads", __FILE__)) # remove uploads dir
+    FileUtils.rm_rf(File.expand_path("../../tmp/uploads", __FILE__)) # remove uploads dir
   end
 
   context "create moderated:" do

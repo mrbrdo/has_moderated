@@ -14,4 +14,4 @@ require 'has_moderated/moderated_create'
 require 'has_moderated/moderated_destroy'
 
 require 'has_moderated/carrier_wave'
-require 'has_moderated/railtie' if defined?(Rails)
+require 'has_moderated/railtie' if defined?(::Rails)

@@ -1,9 +1,8 @@
 .bundle/
 log/*.log
 pkg/
-test/dummy/db/*.sqlite3
-test/dummy/log/*.log
-test/dummy/tmp/
+spec/*.sqlite3
 .rbx/
-test/dummy/public/uploads/
+spec/tmp/uploads/
 **.sqlite3-journal
+.DS_Store

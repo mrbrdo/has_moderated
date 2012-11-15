@@ -11,14 +11,14 @@ end
 
 def uploadEmpty?
   photoModel = crazy_models.get_klass(:Photo)
-  dir = File.expand_path("../../../public/uploads/#{photoModel.to_s.underscore}/avatar", __FILE__)
+  dir = File.expand_path("../../tmp/uploads/#{photoModel.to_s.underscore}/avatar", __FILE__)
   dirEmpty?(dir)
 end
 
-TEMPDIR = File.expand_path("../../../public/uploads/tmp", __FILE__)
+TEMPDIR = File.expand_path("../../tmp/uploads/tmp", __FILE__)
 
 def carrierwave_test_photo
-  test_photo_path = File.expand_path("../../../public/test.jpg", __FILE__)
+  test_photo_path = File.expand_path("../../test.jpg", __FILE__)
   File.open(test_photo_path, "rb")
 end
 
@@ -29,5 +29,5 @@ def assert_photo_uploaded photo
 
   filename = photo.file.file
   File.exist?(filename)
-  assert(filename =~ /avatar\/1\/test.jpg\Z/)
+  (filename =~ /avatar\/1\/test.jpg\Z/).should be_true
 end
