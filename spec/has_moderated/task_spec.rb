@@ -1,12 +1,6 @@
 require 'spec_helper'
 
-def reload_models &block
-  crazy_models.reset
-  crazy_models.with_helpers &block if block_given?
-  crazy_models
-end
-
-describe Task do
+describe "Task" do
 
   #
   # has_moderated_association
@@ -15,11 +9,11 @@ describe Task do
 
   context "has_many association:" do
     before do
-      reload_models.task {
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+      dynamic_models.task {
+        has_many :renamed_subtasks, :class_name => "Subtask", :foreign_key => "task_id"
         has_moderated_association :renamed_subtasks
       }.subtask {
-        belongs_to :task, :class_name => task_class_name, :foreign_key => task_fk
+        belongs_to :task, :foreign_key => "task_id"
       }
     end
 
@@ -127,11 +121,11 @@ describe Task do
 
   context "has_many polymorphic association:" do
     before do
-      reload_models.task {
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :as => :parentable
+      dynamic_models.task {
+        has_many :renamed_subtasks, :class_name => "Subtask", :as => :parentable
         has_moderated_association :renamed_subtasks
       }.subtask {
-        belongs_to :parentable, :class_name => task_class_name, :polymorphic => true
+        belongs_to :parentable, :polymorphic => true
       }
     end
 
@@ -160,11 +154,11 @@ describe Task do
 
   context "has_one polymorphic association:" do
     before do
-      reload_models.task {
-        has_one :renamed_subtask, :class_name => subtask_class_name, :as => :parentable
+      dynamic_models.task {
+        has_one :renamed_subtask, :class_name => "Subtask", :as => :parentable
         has_moderated_association :renamed_subtask
       }.subtask {
-        belongs_to :parentable, :class_name => task_class_name, :polymorphic => true
+        belongs_to :parentable, :polymorphic => true
       }
     end
 
@@ -194,11 +188,11 @@ describe Task do
 
   context "has_and_belongs_to_many association:" do
     before do
-      reload_models.task {
-        has_and_belongs_to_many :renamed_subtasks, :class_name => subtask_class_name, :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
+      dynamic_models.task {
+        has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
         has_moderated_association :renamed_subtasks
       }.subtask {
-        has_and_belongs_to_many :renamed_tasks, :class_name => task_class_name, :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
+        has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
       }
     end
 
@@ -239,11 +233,11 @@ describe Task do
 
   context "has_and_belongs_to_many association (create moderation):" do
     before :each do # important that we do this before EACH
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_create :with_associations => [:renamed_subtasks]
-        has_and_belongs_to_many :renamed_subtasks, :class_name => subtask_class_name, :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
+        has_and_belongs_to_many :renamed_subtasks, :class_name => "Subtask", :join_table => "tasks_jointable", :foreign_key => "m1_id", :association_foreign_key => "m2_id"
       }.subtask {
-        has_and_belongs_to_many :renamed_tasks, :class_name => task_class_name, :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
+        has_and_belongs_to_many :renamed_tasks, :class_name => "Task", :join_table => "tasks_jointable", :foreign_key => "m2_id", :association_foreign_key => "m1_id"
       }
     end
 
@@ -294,17 +288,17 @@ describe Task do
 
   context "has_many :through association:" do
     before do
-      reload_models.task {
-        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m1_id"
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :through => :renamed_connections, :source => :renamed_subtask
+      dynamic_models.task {
+        has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m1_id"
+        has_many :renamed_subtasks, :class_name => "Subtask", :through => :renamed_connections, :source => :renamed_subtask
         has_moderated_association :renamed_subtasks
         has_moderated_association :renamed_connections
       }.subtask {
-        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m2_id"
-        has_many :renamed_tasks, :class_name => task_class_name, :through => :renamed_connections, :source => :renamed_task
+        has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m2_id"
+        has_many :renamed_tasks, :through => :renamed_connections, :source => :renamed_task
       }.task_connection {
-        belongs_to :renamed_task, :class_name => task_class_name, :foreign_key => "m1_id"
-        belongs_to :renamed_subtask, :class_name => subtask_class_name, :foreign_key => "m2_id"
+        belongs_to :renamed_task, :class_name => "Task", :foreign_key => "m1_id"
+        belongs_to :renamed_subtask, :class_name => "Subtask", :foreign_key => "m2_id"
       }
     end
 
@@ -389,11 +383,11 @@ describe Task do
 
   context "has_one association:" do
     before do
-      reload_models.task {
-        has_one :renamed_subtask, :class_name => subtask_class_name, :foreign_key => task_fk
+      dynamic_models.task {
+        has_one :renamed_subtask, :class_name => "Subtask", :foreign_key => "task_id"
         has_moderated_association :renamed_subtask
       }.subtask {
-        belongs_to :task, :class_name => task_class_name
+        belongs_to :task
       }
     end
 
@@ -451,11 +445,11 @@ describe Task do
 
   context "has_one association (create moderation):" do
     before :each do
-      reload_models.task {
-        has_one :renamed_subtask, :class_name => subtask_class_name, :foreign_key => task_fk
+      dynamic_models.task {
+        has_one :renamed_subtask, :class_name => "Subtask", :foreign_key => "task_id"
         has_moderated_create :with_associations => [:renamed_subtask]
       }.subtask {
-        belongs_to :task, :class_name => task_class_name
+        belongs_to :task
       }
     end
 
@@ -509,11 +503,11 @@ describe Task do
 
   context "create moderation with association:" do
     before do
-      reload_models.task {
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+      dynamic_models.task {
+        has_many :renamed_subtasks, :class_name => "Subtask", :foreign_key => "task_id"
         has_moderated_create :with_associations => [:renamed_subtasks]
       }.subtask {
-        belongs_to :task, :class_name => task_class_name
+        belongs_to :task
       }
     end
 
@@ -553,7 +547,7 @@ describe Task do
 
   context "destroy moderation:" do
     before do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_destroy
       }
     end
@@ -580,7 +574,7 @@ describe Task do
 
   context "moderates attributes:" do
     it "moderates an attribute" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
       Task.create! :title => "Task 1", :desc => "Description"
@@ -595,16 +589,16 @@ describe Task do
     end
 
     it "validates uniqueness properly" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
         validates_uniqueness_of :title
       }
       Task.create! :title => "Task 1"
       Task.create! :title => "Task 1"
       Moderation.first.accept
-      expect { Task.create! :title => "Task 1" }.should raise_error
+      expect { Task.create! :title => "Task 1" }.to raise_error
       Moderation.first.accept.should be_false
-      expect { Moderation.first.accept! }.should raise_error
+      expect { Moderation.first.accept! }.to raise_error
     end
   end
 
@@ -614,7 +608,7 @@ describe Task do
 
   context "common features:" do
     it "get_moderation_attributes can be overriden in model" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_create
         self.class_eval do
           def get_moderation_attributes
@@ -631,7 +625,7 @@ describe Task do
     end
 
     it "knows if it's a create moderation" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_create
       }
 
@@ -643,7 +637,7 @@ describe Task do
     end
 
     it "knows if it's a destroy moderation" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_destroy
       }
 
@@ -656,20 +650,20 @@ describe Task do
     end
 
     it "calls moderation callbacks on destroy" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_create
         def self.moderatable_discard(m, opts)
           raise "moderatable_discard"
         end
       }
       Task.create!
-      expect { Moderation.last.destroy }.should raise_error("moderatable_discard")
+      expect { Moderation.last.destroy }.to raise_error("moderatable_discard")
     end
   end
 
   context "hooks:" do
     before do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
         moderation_creating do |moderation|
           moderation.data = "Test!"
@@ -686,7 +680,7 @@ describe Task do
 
   context "without_moderation:" do
     before do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
     end
@@ -723,7 +717,7 @@ describe Task do
 
   context "preview:" do
     it "shows a live preview of changed attributes" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
 
@@ -740,7 +734,7 @@ describe Task do
     end
 
     it "returns a preview for create moderations (issue #13)" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated_create
       }
 
@@ -750,7 +744,7 @@ describe Task do
     end
 
     it "shows a saved preview of changed attributes" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
 
@@ -764,7 +758,7 @@ describe Task do
     end
 
     it "supports dirty tracking for the saved preview" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
 
@@ -777,7 +771,7 @@ describe Task do
     end
 
     it "supports updating moderation attributes for the saved preview if :saveable => true" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
 
@@ -795,7 +789,7 @@ describe Task do
     end
 
     it "doesn't support updating moderation attributes for the saved preview by default" do
-      reload_models.task {
+      dynamic_models.task {
         has_moderated :title
       }
 
@@ -805,8 +799,8 @@ describe Task do
       moderation = Moderation.last
       preview = Moderation.last.preview
       preview.frozen?.should be_true
-      expect { preview.title = "Task 2" }.should raise_error
-      expect { preview.update_moderation }.should raise_error
+      expect { preview.title = "Task 2" }.to raise_error
+      expect { preview.update_moderation }.to raise_error
 
       moderation = Moderation.last
       moderation.accept
@@ -814,11 +808,11 @@ describe Task do
     end
 
     it "shows a saved preview of has_many association" do
-      reload_models.task {
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+      dynamic_models.task {
+        has_many :renamed_subtasks, :class_name => "Subtask", :foreign_key => "task_id"
         has_moderated_association :renamed_subtasks
       }.subtask {
-        belongs_to :task, :class_name => task_class_name
+        belongs_to :task
       }
 
       task = Task.create! :title => "Task 1"
@@ -835,18 +829,18 @@ describe Task do
     end
 
     it "shows a saved preview of has_many :through association" do
-      reload_models.task {
-        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m1_id"
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :through => :renamed_connections, :source => :renamed_subtask
+      dynamic_models.task {
+        has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m1_id"
+        has_many :renamed_subtasks, :class_name => "Subtask", :through => :renamed_connections, :source => :renamed_subtask
         has_moderated_association :renamed_subtasks
         has_moderated_association :renamed_connections
       }.subtask {
         belongs_to :task
-        has_many :renamed_connections, :class_name => task_connection_class_name, :foreign_key => "m2_id"
-        has_many :renamed_tasks, :class_name => task_class_name, :through => :renamed_connections, :source => :renamed_task
+        has_many :renamed_connections, :class_name => "TaskConnection", :foreign_key => "m2_id"
+        has_many :renamed_tasks, :through => :renamed_connections, :source => :renamed_task
       }.task_connection {
-        belongs_to :renamed_task, :class_name => task_class_name, :foreign_key => "m1_id"
-        belongs_to :renamed_subtask, :class_name => subtask_class_name, :foreign_key => "m2_id"
+        belongs_to :renamed_task, :class_name => "Task", :foreign_key => "m1_id"
+        belongs_to :renamed_subtask, :class_name => "Subtask", :foreign_key => "m2_id"
       }
 
       task = Task.create! :title => "Task 1"
@@ -883,15 +877,15 @@ describe Task do
       conn.renamed_subtask.frozen?.should be_true
     end
   end
-
+  
   it "can handle nested associations (issue #17 and #18)" do
-    reload_models.task {
-      has_many :subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
+    dynamic_models.task {
+      has_many :subtasks
       has_moderated_create :with_associations => [:subtasks]
     }.subtask {
-      belongs_to :task_connection, :class_name => task_connection_class_name, :foreign_key => "parentable_id"
-      belongs_to :task, :class_name => task_class_name
-      has_many :photos, :as => :parentable, :class_name => photo_class_name
+      belongs_to :task_connection, :foreign_key => "parentable_id"
+      belongs_to :task
+      has_many :photos, :as => :parentable
       has_moderated :title
     }.photo {
       belongs_to :parentable, :polymorphic => true

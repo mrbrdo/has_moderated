@@ -10,8 +10,7 @@ def tmpEmpty?
 end
 
 def uploadEmpty?
-  photoModel = crazy_models.get_klass(:Photo)
-  dir = File.expand_path("../../tmp/uploads/#{photoModel.to_s.underscore}/avatar", __FILE__)
+  dir = File.expand_path("../../tmp/uploads/#{Photo.to_s.underscore}/avatar", __FILE__)
   dirEmpty?(dir)
 end
 

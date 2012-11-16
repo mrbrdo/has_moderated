@@ -1,12 +1,6 @@
 require 'spec_helper'
 
-def reload_models
-  crazy_models.reset
-  crazy_models.with_helpers &block if block_given?
-  crazy_models
-end
-
-describe Photo do
+describe "Photo" do
   before(:each) do
     FileUtils.rm_rf(TEMPDIR) # remove temp dir
     FileUtils.rm_rf(File.expand_path("../../tmp/uploads", __FILE__)) # remove uploads dir
@@ -14,7 +8,7 @@ describe Photo do
 
   context "create moderated:" do
     before do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         has_moderated_create
         send :include, HasModerated::CarrierWave
@@ -52,7 +46,7 @@ describe Photo do
 
   context "not moderated:" do
     before do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
       }
     end
@@ -71,7 +65,7 @@ describe Photo do
 
   context "update moderated:" do
     before do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
@@ -133,17 +127,17 @@ describe Photo do
 
   context "moderated as association to has_moderated_create:" do
     before do
-      reload_models.task {
-        has_many :renamed_subtasks, :class_name => subtask_class_name, :foreign_key => task_fk
-        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+      dynamic_models.task {
+        has_many :renamed_subtasks, :class_name => "Subtask", :foreign_key => "task_id"
+        has_many :photos, :class_name => "Photo", :foreign_key => "parentable_id"
         has_moderated_create :with_associations => [:photos, :renamed_subtasks]
       }.subtask {
-        belongs_to :task, :class_name => task_class_name
+        belongs_to :task, :class_name => "Task"
       }.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
-        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+        belongs_to :task, :foreign_key => "parentable_id"
       }
 
     end
@@ -196,7 +190,7 @@ describe Photo do
 
   context "moderation preview" do
     it "should show the temporary file as the photo" do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
@@ -218,7 +212,7 @@ describe Photo do
     end
 
     it "should show the temporary file as the photo (create moderation)" do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_create
@@ -239,7 +233,7 @@ describe Photo do
     end
 
     it "should not move image to uploads when calling save on live_preview" do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_create
@@ -259,7 +253,7 @@ describe Photo do
     end
 
     it "should not move image to uploads when calling save on preview" do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_create
@@ -277,14 +271,14 @@ describe Photo do
     end
 
     it "should show the temporary file as the photo (create assoc moderation)" do
-      reload_models.task {
-        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+      dynamic_models.task {
+        has_many :photos, :class_name => "Photo", :foreign_key => "parentable_id"
         has_moderated_create :with_associations => [:photos]
       }.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
-        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+        belongs_to :task, :foreign_key => "parentable_id"
       }
 
       photo_file = carrierwave_test_photo
@@ -303,16 +297,16 @@ describe Photo do
     end
 
     it "should show the temporary file as the photo (assoc moderation)" do
-      reload_models.task {
-        has_many :photos, :class_name => photo_class_name, :foreign_key => "parentable_id"
+      dynamic_models.task {
+        has_many :photos, :class_name => "Photo", :foreign_key => "parentable_id"
         has_moderated_association :photos
       }.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
-        belongs_to :task, :class_name => task_class_name, :foreign_key => "parentable_id"
+        belongs_to :task, :foreign_key => "parentable_id"
       }
-
+      
       photo_file = carrierwave_test_photo
       task = Task.new
       photo = task.photos.build :avatar => photo_file
@@ -329,7 +323,7 @@ describe Photo do
     end
 
     it "should display preview of photo versions correctly" do
-      reload_models.photo {
+      dynamic_models.photo {
         mount_uploader :avatar, GenericUploader
         send :include, HasModerated::CarrierWave
         has_moderated_carrierwave_field :avatar
