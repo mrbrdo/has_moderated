@@ -101,7 +101,9 @@ module HasModerated
               end
               # recursive, used for has_many :through
               if attrs[:associations].present?
-                arec.save(save_opts)
+                Moderation.without_moderation do
+                  arec.save(save_opts)
+                end
                 apply(arec, attrs, save_opts, preview_mode)
               end
             else
