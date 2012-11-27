@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.3
+
+* fix some weird behavior with ruby 1.8.x (not noticable)
+* refactor tests
+
 ## v1.2.2
 
 * fix preview for carrierwave when using versions (will now preview versions correctly)
