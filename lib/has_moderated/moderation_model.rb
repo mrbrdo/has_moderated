@@ -102,7 +102,9 @@ module HasModerated
       live_preview do |record|
         fake_record = HasModerated::Preview::from_live(record, self, options[:saveable])
       end
-      fake_record
+      # Ruby 1.8 will unfreeze when doing ActiveRecord::Rollback
+      # Only necessary to re-freeze for 1.8, associations stay frozen as normal
+      fake_record.freeze
     end
 
     def create?

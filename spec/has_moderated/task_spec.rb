@@ -918,4 +918,22 @@ describe "Task" do
     s.photos.last.title.should eq("Photo")
     s.task_connection.title.should eq("TC")
   end
+
+  it "freezes preview correctly" do
+    # especially important for Ruby 1.8 which behaves differently
+    dynamic_models.task {
+      has_many :subtasks
+      has_moderated_association :subtasks
+    }.subtask {
+      belongs_to :task
+    }
+
+    t = Task.create!
+    t.subtasks.create!
+
+    preview = Moderation.last.preview
+    preview.frozen?.should be_true
+    preview.instance_variable_get(:@has_moderated_fake_associations).frozen?.should be_true
+    preview.subtasks.frozen?.should be_true
+  end
 end

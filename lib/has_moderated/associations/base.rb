@@ -119,6 +119,7 @@ module HasModerated
                 #rec.send(reflection.name.to_s) << arec unless rec.send(reflection.name.to_s).include?(arec)
               else
                 rec.send(reflection.name.to_s + "=", arec)
+                rec.save(save_opts)
               end
             end
           end
